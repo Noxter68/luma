@@ -3,28 +3,29 @@ import { useState, useEffect } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import { colors, spacing, borderRadius, fontSize } from '../theme/colors';
+import { useTranslation } from '../hooks/useTranslation';
 
 export const BudgetScreen = () => {
   const { budget, refresh, setBudget } = useBudgetStore();
+  const { t, locale } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState('');
 
-  // Séparer les effets pour éviter la boucle
   useEffect(() => {
     refresh();
-  }, []); // Charge une seule fois au montage
+  }, []);
 
   useEffect(() => {
     if (budget && !isEditing) {
       setAmount(budget.amount.toString());
     }
-  }, [budget, isEditing]); // Met à jour amount quand budget change
+  }, [budget, isEditing]);
 
   const handleSave = () => {
     const parsedAmount = parseFloat(amount);
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      Alert.alert('Erreur', 'Veuillez entrer un montant valide');
+      Alert.alert(t('error'), t('invalidAmount'));
       return;
     }
 
@@ -33,9 +34,9 @@ export const BudgetScreen = () => {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
       style: 'currency',
-      currency: 'EUR',
+      currency: locale === 'fr' ? 'EUR' : 'USD',
     }).format(value);
   };
 
@@ -43,52 +44,52 @@ export const BudgetScreen = () => {
     <View style={styles.container}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Card>
-          <Text style={styles.label}>Budget mensuel</Text>
+          <Text style={styles.label}>{t('budget.monthlyBudget')}</Text>
 
           {isEditing ? (
             <View>
               <TextInput value={amount} onChangeText={setAmount} placeholder="0" keyboardType="numeric" style={styles.input} autoFocus />
               <View style={styles.buttonRow}>
                 <TouchableOpacity onPress={() => setIsEditing(false)} style={[styles.button, styles.cancelButton]}>
-                  <Text style={styles.cancelButtonText}>Annuler</Text>
+                  <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleSave} style={[styles.button, styles.saveButton]}>
-                  <Text style={styles.saveButtonText}>Enregistrer</Text>
+                  <Text style={styles.saveButtonText}>{t('expense.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <View>
-              <Text style={styles.budgetAmount}>{budget ? formatCurrency(budget.amount) : '€0'}</Text>
+              <Text style={styles.budgetAmount}>{budget ? formatCurrency(budget.amount) : formatCurrency(0)}</Text>
               <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
-                <Text style={styles.editButtonText}>{budget ? 'Modifier' : 'Définir le budget'}</Text>
+                <Text style={styles.editButtonText}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
               </TouchableOpacity>
             </View>
           )}
         </Card>
 
         {/* Categories suggestion */}
-        <Text style={styles.sectionTitle}>Suggestions de répartition</Text>
+        <Text style={styles.sectionTitle}>{t('suggestedAllocation')}</Text>
         <Card>
           <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>Essentiels</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.5) : '€0'}</Text>
+            <Text style={styles.categoryName}>{t('essentials')}</Text>
+            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.5) : formatCurrency(0)}</Text>
           </View>
           <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>Alimentation</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.2) : '€0'}</Text>
+            <Text style={styles.categoryName}>{t('categories.food')}</Text>
+            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.2) : formatCurrency(0)}</Text>
           </View>
           <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>Loisirs</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : '€0'}</Text>
+            <Text style={styles.categoryName}>{t('categories.entertainment')}</Text>
+            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}</Text>
           </View>
           <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>Autre</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : '€0'}</Text>
+            <Text style={styles.categoryName}>{t('categories.other')}</Text>
+            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}</Text>
           </View>
         </Card>
 
-        <Text style={styles.tipText}>💡 Ces suggestions sont indicatives. Adaptez-les selon vos besoins.</Text>
+        <Text style={styles.tipText}>{t('tipText')}</Text>
       </ScrollView>
     </View>
   );

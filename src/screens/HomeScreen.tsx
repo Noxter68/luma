@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useEffect } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
@@ -6,23 +6,27 @@ import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
 import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package } from 'lucide-react-native';
 import { colors, spacing } from '../theme/colors';
+import { useTranslation } from '../hooks/useTranslation';
 
 export const HomeScreen = () => {
   const { budget, expenses, totalSpent, remaining, refresh } = useBudgetStore();
+  const { t, locale } = useTranslation();
 
   useEffect(() => {
     refresh();
   }, []);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
       style: 'currency',
-      currency: 'EUR',
+      currency: locale === 'fr' ? 'EUR' : 'USD',
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'd MMM', { locale: fr });
+    return format(new Date(dateString), 'd MMM', {
+      locale: locale === 'fr' ? fr : enUS,
+    });
   };
 
   const getCategoryIcon = (categoryId: string) => {
@@ -38,36 +42,40 @@ export const HomeScreen = () => {
     return icons[categoryId] || Package;
   };
 
+  const getCategoryLabel = (categoryId: string) => {
+    return t(`categories.${categoryId}`);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* Budget Overview */}
         <Card>
-          <Text style={styles.cardTitle}>Budget mensuel</Text>
-          <Text style={styles.budgetAmount}>{budget ? formatCurrency(budget.amount) : '€0'}</Text>
+          <Text style={styles.cardTitle}>{t('home.budget')}</Text>
+          <Text style={styles.budgetAmount}>{budget ? formatCurrency(budget.amount) : formatCurrency(0)}</Text>
 
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: budget ? `${(totalSpent / budget.amount) * 100}%` : '0%' }]} />
+            <View style={[styles.progressFill, { width: budget ? `${Math.min((totalSpent / budget.amount) * 100, 100)}%` : '0%' }]} />
           </View>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <Text style={styles.statLabel}>Dépensé</Text>
+              <Text style={styles.statLabel}>{t('home.spent')}</Text>
               <Text style={styles.statValue}>{formatCurrency(totalSpent)}</Text>
             </View>
             <View style={styles.stat}>
-              <Text style={styles.statLabel}>Restant</Text>
-              <Text style={[styles.statValue, { color: '#A3B18A' }]}>{formatCurrency(remaining)}</Text>
+              <Text style={styles.statLabel}>{t('home.remaining')}</Text>
+              <Text style={[styles.statValue, { color: colors.sage }]}>{formatCurrency(remaining)}</Text>
             </View>
           </View>
         </Card>
 
         {/* Recent Expenses */}
-        <Text style={styles.sectionTitle}>Dépenses récentes</Text>
+        <Text style={styles.sectionTitle}>{t('expense.add')}</Text>
 
         {expenses.length === 0 ? (
           <Card>
-            <Text style={styles.emptyText}>Aucune dépense ce mois-ci</Text>
+            <Text style={styles.emptyText}>{t('home.noExpenses')}</Text>
           </Card>
         ) : (
           expenses.slice(0, 10).map((expense) => {
@@ -80,7 +88,7 @@ export const HomeScreen = () => {
                     <IconComponent size={20} color={colors.sage} strokeWidth={2} />
                   </View>
                   <View style={styles.expenseInfo}>
-                    <Text style={styles.expenseCategory}>{expense.category}</Text>
+                    <Text style={styles.expenseCategory}>{getCategoryLabel(expense.category)}</Text>
                     {expense.description && <Text style={styles.expenseDescription}>{expense.description}</Text>}
                     <Text style={styles.expenseDate}>{formatDate(expense.date)}</Text>
                   </View>
@@ -107,7 +115,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#F5F2EB',
+    backgroundColor: colors.cream,
   },
   scroll: {
     flex: 1,
@@ -117,13 +125,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    color: '#DAD7CD',
+    color: colors.warmGray,
     marginBottom: 8,
   },
   budgetAmount: {
     fontSize: 40,
     fontWeight: '600',
-    color: '#000',
+    color: colors.black,
     marginBottom: 16,
   },
   progressBar: {
@@ -135,7 +143,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#A3B18A',
+    backgroundColor: colors.sage,
     borderRadius: 4,
   },
   statsRow: {
@@ -147,24 +155,24 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 14,
-    color: '#DAD7CD',
+    color: colors.warmGray,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
+    color: colors.black,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
+    color: colors.black,
     marginTop: 24,
     marginBottom: 12,
   },
   emptyText: {
     fontSize: 16,
-    color: '#DAD7CD',
+    color: colors.warmGray,
     textAlign: 'center',
     paddingVertical: 20,
   },
@@ -182,21 +190,21 @@ const styles = StyleSheet.create({
   expenseCategory: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.black,
     marginBottom: 2,
   },
   expenseDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.gray,
     marginBottom: 4,
   },
   expenseDate: {
     fontSize: 12,
-    color: '#DAD7CD',
+    color: colors.warmGray,
   },
   expenseAmount: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: colors.black,
   },
 });

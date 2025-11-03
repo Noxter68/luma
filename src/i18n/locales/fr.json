@@ -1,7 +1,7 @@
 {
   "home": {
     "title": "Accueil",
-    "budget": "Budget",
+    "budget": "Budget mensuel",
     "spent": "Dépensé",
     "remaining": "Restant",
     "noExpenses": "Aucune dépense ce mois-ci"
@@ -13,13 +13,14 @@
     "editBudget": "Modifier"
   },
   "expense": {
-    "add": "Ajouter une dépense",
+    "add": "Dépenses récentes",
     "amount": "Montant",
     "category": "Catégorie",
-    "description": "Description",
+    "description": "Description (optionnel)",
     "date": "Date",
     "save": "Enregistrer"
   },
+  "addExpense": "Ajouter",
   "categories": {
     "rent": "Loyer",
     "food": "Alimentation",
@@ -34,5 +35,22 @@
     "language": "Langue",
     "export": "Exporter les données",
     "about": "À propos"
-  }
+  },
+  "error": "Erreur",
+  "success": "Succès",
+  "cancel": "Annuler",
+  "invalidAmount": "Veuillez entrer un montant valide",
+  "selectCategory": "Veuillez sélectionner une catégorie",
+  "expenseAdded": "Dépense ajoutée",
+  "cannotAddExpense": "Impossible d'ajouter la dépense",
+  "descriptionPlaceholder": "Ex: Course du samedi",
+  "suggestedAllocation": "Suggestions de répartition",
+  "essentials": "Essentiels",
+  "tipText": "💡 Ces suggestions sont indicatives. Adaptez-les selon vos besoins.",
+  "languageChanged": "Langue changée avec succès",
+  "cannotChangeLanguage": "Impossible de changer la langue",
+  "exportComingSoon": "L'export des données sera bientôt disponible",
+  "aboutText": "Luma vous aide à reprendre le contrôle de vos finances avec clarté et calme.\n\nVersion 1.0.0",
+  "data": "Données",
+  "tagline": "See clearly. Spend calmly."
 }

@@ -3,19 +3,19 @@ import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
-
 import { colors, spacing, borderRadius, fontSize } from '../theme/colors';
 import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package } from 'lucide-react-native';
 import { Button } from '../components/Buttons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const CATEGORIES = [
-  { id: 'rent', label: 'Loyer', icon: Home },
-  { id: 'food', label: 'Alimentation', icon: ShoppingCart },
-  { id: 'transport', label: 'Transport', icon: Car },
-  { id: 'entertainment', label: 'Loisirs', icon: Popcorn },
-  { id: 'subscription', label: 'Abonnements', icon: Smartphone },
-  { id: 'utilities', label: 'Charges', icon: Lightbulb },
-  { id: 'other', label: 'Autre', icon: Package },
+  { id: 'rent', icon: Home },
+  { id: 'food', icon: ShoppingCart },
+  { id: 'transport', icon: Car },
+  { id: 'entertainment', icon: Popcorn },
+  { id: 'subscription', icon: Smartphone },
+  { id: 'utilities', icon: Lightbulb },
+  { id: 'other', icon: Package },
 ];
 
 interface AddExpenseScreenProps {
@@ -24,6 +24,7 @@ interface AddExpenseScreenProps {
 
 export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
   const { addExpense } = useBudgetStore();
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -33,12 +34,12 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     const parsedAmount = parseFloat(amount);
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      Alert.alert('Erreur', 'Veuillez entrer un montant valide');
+      Alert.alert(t('error'), t('invalidAmount'));
       return;
     }
 
     if (!category) {
-      Alert.alert('Erreur', 'Veuillez sélectionner une catégorie');
+      Alert.alert(t('error'), t('selectCategory'));
       return;
     }
 
@@ -52,14 +53,14 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
         date: new Date().toISOString(),
       });
 
-      Alert.alert('Succès', 'Dépense ajoutée', [{ text: 'OK', onPress: () => navigation.navigate('Home') }]);
+      Alert.alert(t('success'), t('expenseAdded'), [{ text: 'OK', onPress: () => navigation.navigate('Home') }]);
 
       // Reset form
       setAmount('');
       setCategory('');
       setDescription('');
     } catch (error) {
-      Alert.alert('Erreur', "Impossible d'ajouter la dépense");
+      Alert.alert(t('error'), t('cannotAddExpense'));
     } finally {
       setLoading(false);
     }
@@ -69,9 +70,9 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     <View style={styles.container}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Card>
-          <Input label="Montant" value={amount} onChangeText={setAmount} placeholder="0.00" keyboardType="decimal-pad" />
+          <Input label={t('expense.amount')} value={amount} onChangeText={setAmount} placeholder="0.00" keyboardType="decimal-pad" />
 
-          <Text style={styles.label}>Catégorie</Text>
+          <Text style={styles.label}>{t('expense.category')}</Text>
           <View style={styles.categoriesGrid}>
             {CATEGORIES.map((cat) => {
               const IconComponent = cat.icon;
@@ -80,18 +81,18 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
               return (
                 <TouchableOpacity key={cat.id} onPress={() => setCategory(cat.id)} style={[styles.categoryButton, isSelected && styles.categoryButtonActive]}>
                   <IconComponent size={32} color={isSelected ? colors.sage : colors.warmGray} strokeWidth={2} />
-                  <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>{cat.label}</Text>
+                  <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>{t(`categories.${cat.id}`)}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          <Input label="Description (optionnel)" value={description} onChangeText={setDescription} placeholder="Ex: Course du samedi" multiline />
+          <Input label={t('expense.description')} value={description} onChangeText={setDescription} placeholder={t('descriptionPlaceholder')} multiline />
         </Card>
 
         <View style={styles.buttonContainer}>
           <Button onPress={handleSave} loading={loading}>
-            Enregistrer
+            {t('expense.save')}
           </Button>
         </View>
       </ScrollView>
