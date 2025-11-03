@@ -1,0 +1,38 @@
+{
+  "home": {
+    "title": "Accueil",
+    "budget": "Budget",
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "noExpenses": "Aucune dépense ce mois-ci"
+  },
+  "budget": {
+    "title": "Budget",
+    "monthlyBudget": "Budget mensuel",
+    "setBudget": "Définir le budget",
+    "editBudget": "Modifier"
+  },
+  "expense": {
+    "add": "Ajouter une dépense",
+    "amount": "Montant",
+    "category": "Catégorie",
+    "description": "Description",
+    "date": "Date",
+    "save": "Enregistrer"
+  },
+  "categories": {
+    "rent": "Loyer",
+    "food": "Alimentation",
+    "transport": "Transport",
+    "entertainment": "Loisirs",
+    "subscription": "Abonnements",
+    "utilities": "Charges",
+    "other": "Autre"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "export": "Exporter les données",
+    "about": "À propos"
+  }
+}

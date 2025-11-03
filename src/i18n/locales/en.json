@@ -1,0 +1,38 @@
+{
+  "home": {
+    "title": "Home",
+    "budget": "Budget",
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "noExpenses": "No expenses this month"
+  },
+  "budget": {
+    "title": "Budget",
+    "monthlyBudget": "Monthly Budget",
+    "setBudget": "Set Budget",
+    "editBudget": "Edit"
+  },
+  "expense": {
+    "add": "Add Expense",
+    "amount": "Amount",
+    "category": "Category",
+    "description": "Description",
+    "date": "Date",
+    "save": "Save"
+  },
+  "categories": {
+    "rent": "Rent",
+    "food": "Food",
+    "transport": "Transport",
+    "entertainment": "Entertainment",
+    "subscription": "Subscriptions",
+    "utilities": "Utilities",
+    "other": "Other"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "export": "Export Data",
+    "about": "About"
+  }
+}
