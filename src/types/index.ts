@@ -20,3 +20,29 @@ export interface Category {
   name: string;
   icon: string;
 }
+
+export interface RecurringExpense {
+  id: string;
+  amount: number;
+  category: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface RecurringInstance {
+  id: string;
+  recurringId: string;
+  cycle: string;
+  wasConfirmed: boolean;
+  createdAt: string;
+}
+
+export interface UserPreferences {
+  id: string;
+  resetDay: number; // 1-28
+  goalType?: 'savings' | 'control' | 'stress-free';
+  personalityType?: 'motivated' | 'data-driven' | 'fun';
+  onboardingCompleted: boolean;
+  createdAt: string;
+}

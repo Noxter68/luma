@@ -2,19 +2,23 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { BudgetScreen } from './src/screens/BudgetScreen';
 import { AddExpenseScreen } from './src/screens/AddExpenseScreen';
+import { RecurringExpensesScreen } from './src/screens/RecurringExpensesScreen';
+import { AddRecurringScreen } from './src/screens/AddRecurringScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { initDatabase } from './src/database';
 import './src/i18n'; // Initialize i18n
 import { useTranslation } from './src/hooks/useTranslation';
-import { Home, Wallet, PlusCircle, Settings } from 'lucide-react-native';
+import { Home, Wallet, PlusCircle, Repeat, Settings } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-function AppNavigator() {
+function TabNavigator() {
   const { t } = useTranslation();
 
   return (
@@ -52,6 +56,14 @@ function AppNavigator() {
         }}
       />
       <Tab.Screen
+        name="Recurring"
+        component={RecurringExpensesScreen}
+        options={{
+          title: t('recurringExpenses'),
+          tabBarIcon: ({ color, size }) => <Repeat size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -60,6 +72,29 @@ function AppNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+function AppNavigator() {
+  const { t } = useTranslation();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#F5F2EB' },
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="AddRecurring"
+        component={AddRecurringScreen}
+        options={{
+          title: t('addRecurringExpense'),
+          presentation: 'modal',
+        }}
+      />
+    </Stack.Navigator>
   );
 }
 

@@ -52,5 +52,15 @@
   "exportComingSoon": "L'export des données sera bientôt disponible",
   "aboutText": "Luma vous aide à reprendre le contrôle de vos finances avec clarté et calme.\n\nVersion 1.0.0",
   "data": "Données",
-  "tagline": "See clearly. Spend calmly."
+  "tagline": "See clearly. Spend calmly.",
+  "totalRecurring": "Total mensuel récurrent",
+  "recurringHint": "Ces dépenses seront ajoutées automatiquement chaque mois",
+  "recurringExpenses": "Dépenses récurrentes",
+  "noRecurringExpenses": "Aucune dépense récurrente",
+  "confirmDelete": "Confirmer la suppression",
+  "confirmDeleteRecurring": "Voulez-vous vraiment supprimer cette dépense récurrente ?",
+  "delete": "Supprimer",
+  "addRecurringExpense": "Ajouter dépense récurrente",
+  "recurringAdded": "Dépense récurrente ajoutée",
+  "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente"
 }

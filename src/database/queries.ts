@@ -1,5 +1,5 @@
 import { db } from './index';
-import { Budget, Expense } from '../types';
+import { Budget, Expense, RecurringExpense } from '../types';
 
 // Budgets
 export const getBudgetByMonth = (month: string): Budget | null => {
@@ -63,4 +63,60 @@ export const createExpense = (expense: Expense): void => {
     expense.date,
     expense.createdAt,
   ]);
+};
+
+// Recurring Expenses
+export const getAllRecurringExpenses = (): RecurringExpense[] => {
+  const results = db.getAllSync<{
+    id: string;
+    amount: number;
+    category: string;
+    description: string | null;
+    is_active: number;
+    created_at: string;
+  }>('SELECT * FROM recurring_expenses ORDER BY created_at DESC');
+
+  return results.map((row) => ({
+    id: row.id,
+    amount: row.amount,
+    category: row.category,
+    description: row.description || undefined,
+    isActive: row.is_active === 1,
+    createdAt: row.created_at,
+  }));
+};
+
+export const createRecurringExpense = (recurring: RecurringExpense): void => {
+  db.runSync('INSERT INTO recurring_expenses (id, amount, category, description, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
+    recurring.id,
+    recurring.amount,
+    recurring.category,
+    recurring.description || null,
+    recurring.isActive ? 1 : 0,
+    recurring.createdAt,
+  ]);
+};
+
+export const updateRecurringExpense = (recurring: RecurringExpense): void => {
+  db.runSync('UPDATE recurring_expenses SET amount = ?, category = ?, description = ?, is_active = ? WHERE id = ?', [
+    recurring.amount,
+    recurring.category,
+    recurring.description || null,
+    recurring.isActive ? 1 : 0,
+    recurring.id,
+  ]);
+};
+
+export const deleteRecurringExpense = (id: string): void => {
+  db.runSync('DELETE FROM recurring_expenses WHERE id = ?', [id]);
+};
+
+// App State
+export const getLastProcessedMonth = (): string | null => {
+  const result = db.getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['last_processed_month']);
+  return result?.value || null;
+};
+
+export const setLastProcessedMonth = (month: string): void => {
+  db.runSync('INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)', ['last_processed_month', month]);
 };
