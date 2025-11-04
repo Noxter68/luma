@@ -1,15 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
-import { colors, spacing, borderRadius, fontSize } from '../theme/colors';
+import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
-import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Plus, Trash2, Edit3 } from 'lucide-react-native';
+import { useTheme } from '../contexts/ThemeContext';
+import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Plus, Trash2 } from 'lucide-react-native';
 import { RecurringExpense } from '../types';
 
 export const RecurringExpensesScreen = ({ navigation }: any) => {
   const { recurringExpenses, loadRecurringExpenses, deleteRecurringExpense, updateRecurringExpense } = useBudgetStore();
   const { t, locale } = useTranslation();
+  const { isDark, colors } = useTheme();
 
   useEffect(() => {
     loadRecurringExpenses();
@@ -60,51 +62,68 @@ export const RecurringExpensesScreen = ({ navigation }: any) => {
   const totalRecurring = recurringExpenses.filter((r) => r.isActive).reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <View style={tw.style('flex-1', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
+      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-6`}>
         {/* Summary Card */}
         <Card>
-          <Text style={styles.label}>{t('totalRecurring')}</Text>
-          <Text style={styles.totalAmount}>{formatCurrency(totalRecurring)}</Text>
-          <Text style={styles.hint}>{t('recurringHint')}</Text>
+          <Text style={tw.style('text-sm mb-1', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('totalRecurring')}</Text>
+          <Text style={tw.style('text-4xl font-bold mb-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(totalRecurring)}</Text>
+          <Text style={tw.style('text-xs italic', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('recurringHint')}</Text>
         </Card>
 
         {/* Recurring Expenses List */}
-        <View style={styles.header}>
-          <Text style={styles.sectionTitle}>{t('recurringExpenses')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('AddRecurring')} style={styles.addButton}>
-            <Plus size={20} color={colors.white} strokeWidth={2.5} />
+        <View style={tw`flex-row justify-between items-center mt-8 mb-3`}>
+          <Text style={tw.style('text-lg font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('recurringExpenses')}</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('AddRecurring')} style={tw.style('w-9 h-9 rounded-full justify-center items-center', `bg-[${colors.primary}]`)}>
+            <Plus size={20} color="white" strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
 
         {recurringExpenses.length === 0 ? (
           <Card>
-            <Text style={styles.emptyText}>{t('noRecurringExpenses')}</Text>
+            <Text style={tw.style('text-base text-center py-8', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('noRecurringExpenses')}</Text>
           </Card>
         ) : (
           recurringExpenses.map((recurring) => {
             const IconComponent = getCategoryIcon(recurring.category);
 
             return (
-              <Card key={recurring.id} style={styles.recurringCard}>
-                <View style={styles.recurringRow}>
-                  <TouchableOpacity onPress={() => handleToggleActive(recurring)} style={[styles.checkbox, recurring.isActive && styles.checkboxActive]}>
-                    {recurring.isActive && <View style={styles.checkboxInner} />}
+              <Card key={recurring.id} style={tw`mb-3`}>
+                <View style={tw`flex-row items-center gap-4`}>
+                  <TouchableOpacity
+                    onPress={() => handleToggleActive(recurring)}
+                    style={tw.style(
+                      'w-6 h-6 rounded-full border-2 justify-center items-center',
+                      recurring.isActive ? `border-[${colors.primary}] bg-[${colors.primary}]/20` : `border-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`
+                    )}
+                  >
+                    {recurring.isActive && <View style={tw.style('w-3 h-3 rounded-full', `bg-[${colors.primary}]`)} />}
                   </TouchableOpacity>
 
-                  <View style={[styles.iconContainer, !recurring.isActive && styles.iconContainerInactive]}>
-                    <IconComponent size={20} color={recurring.isActive ? colors.sage : colors.warmGray} strokeWidth={2} />
+                  <View
+                    style={tw.style(
+                      'w-10 h-10 rounded-full justify-center items-center',
+                      recurring.isActive ? `bg-[${colors.primary}]/20` : isDark ? `bg-[${colors.dark.surface}]` : `bg-[${colors.light.border}]`
+                    )}
+                  >
+                    <IconComponent size={20} color={recurring.isActive ? colors.primary : isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
                   </View>
 
-                  <View style={styles.recurringInfo}>
-                    <Text style={[styles.recurringCategory, !recurring.isActive && styles.textInactive]}>{getCategoryLabel(recurring.category)}</Text>
-                    {recurring.description && <Text style={[styles.recurringDescription, !recurring.isActive && styles.textInactive]}>{recurring.description}</Text>}
+                  <View style={tw`flex-1`}>
+                    <Text style={tw.style('text-base font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`, !recurring.isActive && 'opacity-40')}>
+                      {getCategoryLabel(recurring.category)}
+                    </Text>
+                    {recurring.description && (
+                      <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`, !recurring.isActive && 'opacity-40')}>{recurring.description}</Text>
+                    )}
                   </View>
 
-                  <Text style={[styles.recurringAmount, !recurring.isActive && styles.textInactive]}>{formatCurrency(recurring.amount)}</Text>
+                  <Text style={tw.style('text-lg font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`, !recurring.isActive && 'opacity-40')}>
+                    {formatCurrency(recurring.amount)}
+                  </Text>
 
-                  <TouchableOpacity onPress={() => handleDelete(recurring.id)} style={styles.deleteButton}>
-                    <Trash2 size={18} color={colors.warmGray} strokeWidth={2} />
+                  <TouchableOpacity onPress={() => handleDelete(recurring.id)} style={tw`p-1`}>
+                    <Trash2 size={18} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
                   </TouchableOpacity>
                 </View>
               </Card>
@@ -115,120 +134,3 @@ export const RecurringExpensesScreen = ({ navigation }: any) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.cream,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: fontSize.sm,
-    color: colors.warmGray,
-    marginBottom: spacing.xs,
-  },
-  totalAmount: {
-    fontSize: fontSize.xxxl,
-    fontWeight: '700',
-    color: colors.black,
-    marginBottom: spacing.sm,
-  },
-  hint: {
-    fontSize: fontSize.xs,
-    color: colors.warmGray,
-    fontStyle: 'italic',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.sage,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: fontSize.md,
-    color: colors.warmGray,
-    textAlign: 'center',
-    paddingVertical: spacing.xl,
-  },
-  recurringCard: {
-    marginBottom: spacing.md,
-  },
-  recurringRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.warmGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxActive: {
-    borderColor: colors.sage,
-    backgroundColor: colors.sage + '15',
-  },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.sage,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.sage + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconContainerInactive: {
-    backgroundColor: colors.warmGray + '15',
-  },
-  recurringInfo: {
-    flex: 1,
-  },
-  recurringCategory: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.black,
-    marginBottom: 2,
-  },
-  recurringDescription: {
-    fontSize: fontSize.sm,
-    color: colors.gray,
-  },
-  recurringAmount: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  textInactive: {
-    opacity: 0.4,
-  },
-  deleteButton: {
-    padding: spacing.xs,
-  },
-});

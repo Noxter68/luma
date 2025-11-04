@@ -1,12 +1,13 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import { Input } from '../components/Input';
-import { colors, spacing, borderRadius, fontSize } from '../theme/colors';
+import tw from '../lib/tailwind';
 import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package } from 'lucide-react-native';
 import { Button } from '../components/Buttons';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTheme } from '../contexts/ThemeContext';
 
 const CATEGORIES = [
   { id: 'rent', icon: Home },
@@ -25,6 +26,7 @@ interface AddRecurringScreenProps {
 export const AddRecurringScreen = ({ navigation }: AddRecurringScreenProps) => {
   const { addRecurringExpense } = useBudgetStore();
   const { t } = useTranslation();
+  const { isDark, colors } = useTheme();
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -55,7 +57,6 @@ export const AddRecurringScreen = ({ navigation }: AddRecurringScreenProps) => {
 
       Alert.alert(t('success'), t('recurringAdded'), [{ text: 'OK', onPress: () => navigation.goBack() }]);
 
-      // Reset form
       setAmount('');
       setCategory('');
       setDescription('');
@@ -67,21 +68,33 @@ export const AddRecurringScreen = ({ navigation }: AddRecurringScreenProps) => {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <View style={tw.style('flex-1', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
+      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-6`}>
         <Card>
           <Input label={t('expense.amount')} value={amount} onChangeText={setAmount} placeholder="0.00" keyboardType="decimal-pad" />
 
-          <Text style={styles.label}>{t('expense.category')}</Text>
-          <View style={styles.categoriesGrid}>
+          <Text style={tw.style('text-sm mb-2 font-medium', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expense.category')}</Text>
+          <View style={tw`flex-row flex-wrap gap-2 mb-4`}>
             {CATEGORIES.map((cat) => {
               const IconComponent = cat.icon;
               const isSelected = category === cat.id;
 
               return (
-                <TouchableOpacity key={cat.id} onPress={() => setCategory(cat.id)} style={[styles.categoryButton, isSelected && styles.categoryButtonActive]}>
-                  <IconComponent size={32} color={isSelected ? colors.sage : colors.warmGray} strokeWidth={2} />
-                  <Text style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}>{t(`categories.${cat.id}`)}</Text>
+                <TouchableOpacity
+                  key={cat.id}
+                  onPress={() => setCategory(cat.id)}
+                  style={tw.style(
+                    'w-[30%] aspect-square rounded-2xl border-2 justify-center items-center p-2',
+                    isDark ? `bg-[${colors.dark.surface}]` : 'bg-white',
+                    isSelected ? `border-[${colors.primary}] bg-[${colors.primary}]/10` : `border-[${isDark ? colors.dark.border : colors.light.border}]`
+                  )}
+                >
+                  <IconComponent size={32} color={isSelected ? colors.primary : isDark ? colors.dark.textSecondary : colors.light.textSecondary} strokeWidth={2} />
+                  <Text
+                    style={tw.style('text-xs text-center mt-1', isSelected ? `text-[${colors.primary}] font-semibold` : `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}
+                  >
+                    {t(`categories.${cat.id}`)}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -90,7 +103,7 @@ export const AddRecurringScreen = ({ navigation }: AddRecurringScreenProps) => {
           <Input label={t('expense.description')} value={description} onChangeText={setDescription} placeholder={t('descriptionPlaceholder')} multiline />
         </Card>
 
-        <View style={styles.buttonContainer}>
+        <View style={tw`mt-6`}>
           <Button onPress={handleSave} loading={loading}>
             {t('expense.save')}
           </Button>
@@ -99,56 +112,3 @@ export const AddRecurringScreen = ({ navigation }: AddRecurringScreenProps) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.cream,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: fontSize.sm,
-    color: colors.warmGray,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  categoryButton: {
-    width: '30%',
-    aspectRatio: 1,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: colors.cream,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.sm,
-  },
-  categoryButtonActive: {
-    borderColor: colors.sage,
-    backgroundColor: colors.sage + '15',
-  },
-  categoryLabel: {
-    fontSize: fontSize.xs,
-    color: colors.gray,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-  },
-  categoryLabelActive: {
-    color: colors.sage,
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    marginTop: spacing.lg,
-  },
-});

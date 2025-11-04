@@ -1,8 +1,6 @@
-// src/components/BudgetGauge.tsx
-
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
-import { colors, spacing, fontSize } from '../theme/colors';
+import tw from '../lib/tailwind';
 
 interface BudgetGaugeProps {
   budget: number;
@@ -40,8 +38,8 @@ export const BudgetGauge = ({ budget, spent, recurring }: BudgetGaugeProps) => {
 
   // Statut et couleur basés sur ce qui RESTE
   const getStatus = () => {
-    if (remainingPercentage >= 80) return { label: 'Excellent', color: colors.sage };
-    if (remainingPercentage >= 50) return { label: 'Parfait', color: colors.oliveGreen };
+    if (remainingPercentage >= 80) return { label: 'Excellent', color: tw.color('sage') };
+    if (remainingPercentage >= 50) return { label: 'Parfait', color: tw.color('oliveGreen') };
     if (remainingPercentage >= 25) return { label: 'Bon rythme', color: '#F4A460' };
     if (remainingPercentage >= 10) return { label: 'Attention', color: '#FF8C42' };
     if (remainingPercentage > 0) return { label: 'Prudence', color: '#FF6B6B' };
@@ -51,14 +49,14 @@ export const BudgetGauge = ({ budget, spent, recurring }: BudgetGaugeProps) => {
   const status = getStatus();
 
   return (
-    <View style={styles.container}>
+    <View style={tw`items-center justify-center pt-6 pb-1 relative`}>
       {/* Background: fond crème */}
-      <View style={styles.gaugeContainer}>
-        <AnimatedCircularProgress size={240} width={20} fill={100} tintColor={colors.cream} backgroundColor="transparent" rotation={270} arcSweepAngle={180} lineCap="round" duration={0} />
+      <View style={tw`items-center justify-center`}>
+        <AnimatedCircularProgress size={240} width={20} fill={100} tintColor={tw.color('cream')} backgroundColor="transparent" rotation={270} arcSweepAngle={180} lineCap="round" duration={0} />
       </View>
 
       {/* Jauge principale: ce qui RESTE */}
-      <View style={[styles.gaugeContainer, styles.absoluteGauge]}>
+      <View style={tw`items-center justify-center absolute top-6`}>
         <AnimatedCircularProgress
           size={240}
           width={20}
@@ -73,43 +71,10 @@ export const BudgetGauge = ({ budget, spent, recurring }: BudgetGaugeProps) => {
       </View>
 
       {/* Texte central */}
-      <View style={styles.textContainer}>
-        <Text style={[styles.percentage, { color: status.color }]}>{displayPercentage}%</Text>
-        <Text style={[styles.status, { color: status.color }]}>{status.label}</Text>
+      <View style={tw`items-center justify-center -mt-36 mb-6`}>
+        <Text style={[tw`text-4xl font-bold mb-1`, { color: status.color }]}>{displayPercentage}%</Text>
+        <Text style={[tw`text-lg font-semibold`, { color: status.color }]}>{status.label}</Text>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xs,
-    position: 'relative',
-  },
-  gaugeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  absoluteGauge: {
-    position: 'absolute',
-    top: spacing.lg,
-  },
-  textContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -150,
-    marginBottom: spacing.lg,
-  },
-  percentage: {
-    fontSize: fontSize.xxxl,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  status: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-  },
-});

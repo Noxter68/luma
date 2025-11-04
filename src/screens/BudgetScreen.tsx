@@ -1,13 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
-import { colors, spacing, borderRadius, fontSize } from '../theme/colors';
+import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const BudgetScreen = () => {
   const { budget, refresh, setBudget } = useBudgetStore();
   const { t, locale } = useTranslation();
+  const { isDark, colors } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState('');
 
@@ -41,157 +43,74 @@ export const BudgetScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <View style={tw.style('flex-1', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
+      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-6`}>
         <Card>
-          <Text style={styles.label}>{t('budget.monthlyBudget')}</Text>
+          <Text style={tw.style('text-base mb-2', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.monthlyBudget')}</Text>
 
           {isEditing ? (
             <View>
-              <TextInput value={amount} onChangeText={setAmount} placeholder="0" keyboardType="numeric" style={styles.input} autoFocus />
-              <View style={styles.buttonRow}>
-                <TouchableOpacity onPress={() => setIsEditing(false)} style={[styles.button, styles.cancelButton]}>
-                  <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0"
+                keyboardType="numeric"
+                style={tw.style('text-4xl font-semibold py-2 mb-6 border-b-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`, `border-[${colors.primary}]`)}
+                placeholderTextColor={isDark ? colors.dark.textTertiary : colors.light.textTertiary}
+                autoFocus
+              />
+              <View style={tw`flex-row gap-4`}>
+                <TouchableOpacity onPress={() => setIsEditing(false)} style={tw.style('flex-1 py-4 rounded-2xl items-center', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
+                  <Text style={tw`text-white text-base font-semibold`}>{t('cancel')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleSave} style={[styles.button, styles.saveButton]}>
-                  <Text style={styles.saveButtonText}>{t('expense.save')}</Text>
+                <TouchableOpacity onPress={handleSave} style={tw.style('flex-1 py-4 rounded-2xl items-center', `bg-[${colors.primary}]`)}>
+                  <Text style={tw`text-white text-base font-semibold`}>{t('expense.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <View>
-              <Text style={styles.budgetAmount}>{budget ? formatCurrency(budget.amount) : formatCurrency(0)}</Text>
-              <TouchableOpacity onPress={() => setIsEditing(true)} style={styles.editButton}>
-                <Text style={styles.editButtonText}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
+              <Text style={tw.style('text-4xl font-semibold mb-6', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+                {budget ? formatCurrency(budget.amount) : formatCurrency(0)}
+              </Text>
+              <TouchableOpacity onPress={() => setIsEditing(true)} style={tw.style('py-4 rounded-2xl items-center', `bg-[${colors.primary}]`)}>
+                <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
               </TouchableOpacity>
             </View>
           )}
         </Card>
 
         {/* Categories suggestion */}
-        <Text style={styles.sectionTitle}>{t('suggestedAllocation')}</Text>
+        <Text style={tw.style('text-lg font-semibold mt-8 mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('suggestedAllocation')}</Text>
         <Card>
-          <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>{t('essentials')}</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.5) : formatCurrency(0)}</Text>
+          <View style={tw.style('flex-row justify-between items-center py-4 border-b', `border-[${isDark ? colors.dark.border : colors.light.border}]`)}>
+            <Text style={tw.style('text-base', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('essentials')}</Text>
+            <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+              {budget ? formatCurrency(budget.amount * 0.5) : formatCurrency(0)}
+            </Text>
           </View>
-          <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>{t('categories.food')}</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.2) : formatCurrency(0)}</Text>
+          <View style={tw.style('flex-row justify-between items-center py-4 border-b', `border-[${isDark ? colors.dark.border : colors.light.border}]`)}>
+            <Text style={tw.style('text-base', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('categories.food')}</Text>
+            <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+              {budget ? formatCurrency(budget.amount * 0.2) : formatCurrency(0)}
+            </Text>
           </View>
-          <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>{t('categories.entertainment')}</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}</Text>
+          <View style={tw.style('flex-row justify-between items-center py-4 border-b', `border-[${isDark ? colors.dark.border : colors.light.border}]`)}>
+            <Text style={tw.style('text-base', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('categories.entertainment')}</Text>
+            <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+              {budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}
+            </Text>
           </View>
-          <View style={styles.categoryRow}>
-            <Text style={styles.categoryName}>{t('categories.other')}</Text>
-            <Text style={styles.categoryAmount}>{budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}</Text>
+          <View style={tw.style('flex-row justify-between items-center py-4 border-b', `border-[${isDark ? colors.dark.border : colors.light.border}]`)}>
+            <Text style={tw.style('text-base', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('categories.other')}</Text>
+            <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+              {budget ? formatCurrency(budget.amount * 0.15) : formatCurrency(0)}
+            </Text>
           </View>
         </Card>
 
-        <Text style={styles.tipText}>{t('tipText')}</Text>
+        <Text style={tw.style('text-sm text-center mt-6 italic', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('tipText')}</Text>
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.cream,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  label: {
-    fontSize: fontSize.md,
-    color: colors.warmGray,
-    marginBottom: spacing.sm,
-  },
-  budgetAmount: {
-    fontSize: fontSize.xxxl,
-    fontWeight: '600',
-    color: colors.black,
-    marginBottom: spacing.lg,
-  },
-  input: {
-    fontSize: fontSize.xxxl,
-    fontWeight: '600',
-    color: colors.black,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.sage,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: colors.warmGray,
-  },
-  cancelButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: colors.sage,
-  },
-  saveButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  editButton: {
-    backgroundColor: colors.sage,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  editButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.black,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cream,
-  },
-  categoryName: {
-    fontSize: fontSize.md,
-    color: colors.gray,
-  },
-  categoryAmount: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  tipText: {
-    fontSize: fontSize.sm,
-    color: colors.warmGray,
-    textAlign: 'center',
-    marginTop: spacing.lg,
-    fontStyle: 'italic',
-  },
-});

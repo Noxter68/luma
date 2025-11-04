@@ -12,8 +12,9 @@ import { RecurringExpensesScreen } from './src/screens/RecurringExpensesScreen';
 import { AddRecurringScreen } from './src/screens/AddRecurringScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { initDatabase } from './src/database';
-import './src/i18n'; // Initialize i18n
+import './src/i18n';
 import { useTranslation } from './src/hooks/useTranslation';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { Home, Wallet, PlusCircle, Repeat, Settings } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
@@ -21,14 +22,21 @@ const Stack = createNativeStackNavigator();
 
 function TabNavigator() {
   const { t } = useTranslation();
+  const { isDark, colors } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarStyle: { backgroundColor: '#F5F2EB' },
-        tabBarActiveTintColor: '#A3B18A',
-        tabBarInactiveTintColor: '#DAD7CD',
-        headerStyle: { backgroundColor: '#F5F2EB' },
+        tabBarStyle: {
+          backgroundColor: isDark ? colors.dark.surface : colors.light.bg,
+          borderTopColor: isDark ? colors.dark.border : colors.light.border,
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: isDark ? colors.dark.textTertiary : colors.light.textTertiary,
+        headerStyle: {
+          backgroundColor: isDark ? colors.dark.bg : colors.light.bg,
+        },
+        headerTintColor: isDark ? colors.dark.textPrimary : colors.light.textPrimary,
         headerShadowVisible: false,
       }}
     >
@@ -38,6 +46,7 @@ function TabNavigator() {
         options={{
           title: t('home.title'),
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -78,11 +87,15 @@ function TabNavigator() {
 
 function AppNavigator() {
   const { t } = useTranslation();
+  const { isDark, colors } = useTheme();
 
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#F5F2EB' },
+        headerStyle: {
+          backgroundColor: isDark ? colors.dark.bg : colors.light.bg,
+        },
+        headerTintColor: isDark ? colors.dark.textPrimary : colors.light.textPrimary,
         headerShadowVisible: false,
       }}
     >
@@ -99,7 +112,9 @@ function AppNavigator() {
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { isDark } = useTheme();
+
   useEffect(() => {
     console.log('Initializing database...');
     try {
@@ -113,9 +128,17 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar style="dark" />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <AppNavigator />
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
