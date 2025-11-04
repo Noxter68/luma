@@ -7,18 +7,23 @@ interface BudgetGaugeProps {
   budget: number;
   spent: number;
   recurring: number;
+  income: number;
 }
 
-export const BudgetGauge = ({ budget, spent, recurring }: BudgetGaugeProps) => {
+export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugeProps) => {
   const { isDark, colors } = useTheme();
 
   const safeBudget = Number(budget) || 0;
   const safeSpent = Number(spent) || 0;
   const safeRecurring = Number(recurring) || 0;
+  const safeIncome = Number(income) || 0;
 
-  const totalConsumed = safeSpent + safeRecurring;
-  const totalConsumedPercentage = safeBudget > 0 ? (totalConsumed / safeBudget) * 100 : 0;
-  const remainingPercentage = Math.max(100 - totalConsumedPercentage, 0);
+  // La gauge est TOUJOURS basée sur le revenue total du mois
+  // Revenue - Recurring Expenses - Spent = Ce qui reste
+  const totalAvailable = safeIncome > 0 ? safeIncome : safeBudget;
+  const totalConsumed = safeRecurring + safeSpent;
+  const remaining = totalAvailable - totalConsumed;
+  const remainingPercentage = totalAvailable > 0 ? (remaining / totalAvailable) * 100 : 0;
 
   const getDisplayPercentage = () => {
     if (isNaN(remainingPercentage)) return '0';
@@ -57,7 +62,7 @@ export const BudgetGauge = ({ budget, spent, recurring }: BudgetGaugeProps) => {
         <AnimatedCircularProgress
           size={240}
           width={20}
-          fill={remainingPercentage}
+          fill={Math.max(0, remainingPercentage)}
           tintColor={status.color}
           backgroundColor="transparent"
           rotation={270}

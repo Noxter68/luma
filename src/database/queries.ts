@@ -1,5 +1,5 @@
 import { db } from './index';
-import { Budget, Expense, RecurringExpense } from '../types';
+import { Budget, Expense, RecurringExpense, Income } from '../types';
 
 // Budgets
 export const getBudgetByMonth = (month: string): Budget | null => {
@@ -65,6 +65,10 @@ export const createExpense = (expense: Expense): void => {
   ]);
 };
 
+export const deleteExpense = (id: string): void => {
+  db.runSync('DELETE FROM expenses WHERE id = ?', [id]);
+};
+
 // Recurring Expenses
 export const getAllRecurringExpenses = (): RecurringExpense[] => {
   const results = db.getAllSync<{
@@ -97,10 +101,6 @@ export const createRecurringExpense = (recurring: RecurringExpense): void => {
   ]);
 };
 
-export const deleteExpense = (id: string): void => {
-  db.runSync('DELETE FROM expenses WHERE id = ?', [id]);
-};
-
 export const updateRecurringExpense = (recurring: RecurringExpense): void => {
   db.runSync('UPDATE recurring_expenses SET amount = ?, category = ?, description = ?, is_active = ? WHERE id = ?', [
     recurring.amount,
@@ -115,12 +115,79 @@ export const deleteRecurringExpense = (id: string): void => {
   db.runSync('DELETE FROM recurring_expenses WHERE id = ?', [id]);
 };
 
-// App State
-export const getLastProcessedMonth = (): string | null => {
-  const result = db.getFirstSync<{ value: string }>('SELECT value FROM app_state WHERE key = ?', ['last_processed_month']);
-  return result?.value || null;
+// Incomes
+export const getIncomesByMonth = (month: string): Income[] => {
+  const results = db.getAllSync<{
+    id: string;
+    month: string;
+    amount: number;
+    source: string;
+    description: string | null;
+    is_recurring: number;
+    date: string;
+    created_at: string;
+  }>('SELECT * FROM incomes WHERE month = ? ORDER BY date DESC', [month]);
+
+  return results.map((row) => ({
+    id: row.id,
+    month: row.month,
+    amount: row.amount,
+    source: row.source as Income['source'],
+    description: row.description || undefined,
+    isRecurring: row.is_recurring === 1,
+    date: row.date,
+    createdAt: row.created_at,
+  }));
 };
 
-export const setLastProcessedMonth = (month: string): void => {
-  db.runSync('INSERT OR REPLACE INTO app_state (key, value) VALUES (?, ?)', ['last_processed_month', month]);
+export const createIncome = (income: Income): void => {
+  db.runSync('INSERT INTO incomes (id, month, amount, source, description, is_recurring, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+    income.id,
+    income.month,
+    income.amount,
+    income.source,
+    income.description || null,
+    income.isRecurring ? 1 : 0,
+    income.date,
+    income.createdAt,
+  ]);
+};
+
+export const updateIncome = (income: Income): void => {
+  db.runSync('UPDATE incomes SET amount = ?, source = ?, description = ?, is_recurring = ? WHERE id = ?', [
+    income.amount,
+    income.source,
+    income.description || null,
+    income.isRecurring ? 1 : 0,
+    income.id,
+  ]);
+};
+
+export const deleteIncome = (id: string): void => {
+  db.runSync('DELETE FROM incomes WHERE id = ?', [id]);
+};
+
+// Get all recurring incomes (pour l'auto-création)
+export const getAllRecurringIncomes = (): Income[] => {
+  const results = db.getAllSync<{
+    id: string;
+    month: string;
+    amount: number;
+    source: string;
+    description: string | null;
+    is_recurring: number;
+    date: string;
+    created_at: string;
+  }>('SELECT * FROM incomes WHERE is_recurring = 1 ORDER BY created_at DESC');
+
+  return results.map((row) => ({
+    id: row.id,
+    month: row.month,
+    amount: row.amount,
+    source: row.source as Income['source'],
+    description: row.description || undefined,
+    isRecurring: row.is_recurring === 1,
+    date: row.date,
+    createdAt: row.created_at,
+  }));
 };

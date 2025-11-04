@@ -12,6 +12,30 @@
     "setBudget": "Définir le budget",
     "editBudget": "Modifier"
   },
+  "revenue": {
+    "title": "Revenue",
+    "totalRevenue": "Total Revenue",
+    "addRevenue": "Ajouter Revenue",
+    "source": "Source",
+    "amount": "Montant",
+    "description": "Description (optionnel)",
+    "descriptionPlaceholder": "Ex: Salaire novembre 2024",
+    "recurring": "Récurrent",
+    "recurringHint": "Sera ajouté automatiquement chaque mois",
+    "noRevenue": "Aucun revenue ce mois-ci",
+    "list": "Revenues du mois",
+    "incomeMonth": "Revenue du mois",
+    "selectSource": "Sélectionner une source",
+    "incomeAdded": "Revenue ajouté",
+    "cannotAddIncome": "Impossible d'ajouter le revenue"
+  },
+  "incomeSources": {
+    "salary": "Salaire",
+    "bonus": "Prime",
+    "freelance": "Freelance",
+    "gift": "Cadeau",
+    "other": "Autre"
+  },
   "expense": {
     "add": "Dépenses récentes",
     "amount": "Montant",
@@ -123,5 +147,23 @@
   "delete": "Supprimer",
   "addRecurringExpense": "Ajouter dépense récurrente",
   "recurringAdded": "Dépense récurrente ajoutée",
-  "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente"
+  "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente",
+  "gaugeToggle": {
+    "revenue": "Revenue",
+    "budget": "Budget"
+  },
+  "budgetProgress": {
+    "totalRevenue": "Revenue Total",
+    "budgetLimit": "Limite Budget",
+    "ofRevenue": "du revenue",
+    "consumed": "Consommé",
+    "remaining": "Restant",
+    "noBudget": "Pas de budget",
+    "onTrack": "Sur la bonne voie",
+    "careful": "Attention",
+    "nearLimit": "Proche de la limite",
+    "overBudget": "Budget dépassé",
+    "overview": "Vue d'ensemble",
+    "toSave": "à épargner"
+  }
 }

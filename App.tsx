@@ -6,8 +6,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { HomeScreen } from './src/screens/HomeScreen';
-import { BudgetScreen } from './src/screens/BudgetScreen';
+import { RevenueScreen } from './src/screens/RevenueScreen';
 import { AddExpenseScreen } from './src/screens/AddExpenseScreen';
+import { AddIncomeScreen } from './src/screens/AddIncomeScreen';
 import { RecurringExpensesScreen } from './src/screens/RecurringExpensesScreen';
 import { AddRecurringScreen } from './src/screens/AddRecurringScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -51,10 +52,10 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Budget"
-        component={BudgetScreen}
+        name="Revenue"
+        component={RevenueScreen}
         options={{
-          title: t('budget.title'),
+          title: t('revenue.title'),
           tabBarIcon: ({ color, size }) => <Wallet size={size} color={color} />,
           headerShown: false,
         }}
@@ -110,6 +111,15 @@ function AppNavigator() {
         options={{
           title: t('addRecurringExpense'),
           presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="AddIncome"
+        component={AddIncomeScreen}
+        options={{
+          title: t('revenue.addRevenue'),
+          presentation: 'modal',
+          headerShown: false,
         }}
       />
       <Stack.Screen

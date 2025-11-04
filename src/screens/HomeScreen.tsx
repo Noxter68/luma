@@ -4,7 +4,7 @@ import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import { format, addMonths, subMonths } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
-import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Trash2, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Trash2, ChevronLeft, ChevronRight, Briefcase, Gift, Laptop, DollarSign } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,12 +14,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BudgetGauge } from '../components/BudgetGauge';
+import { BudgetProgressBar } from '../components/BudgetProgressBar';
 
 export const HomeScreen = () => {
-  const { budget, expenses, recurringExpenses, totalSpent, totalRecurring, totalWithRecurring, remaining, refresh, deleteExpense, setCurrentMonth, currentMonth } = useBudgetStore();
+  const { budget, expenses, recurringExpenses, incomes, totalSpent, totalRecurring, totalIncome, refresh, deleteExpense, setCurrentMonth, currentMonth } = useBudgetStore();
+
   const { t, locale } = useTranslation();
   const { isDark, palette, colors } = useTheme();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [gaugeView, setGaugeView] = useState<'revenue' | 'budget'>('revenue');
+  const [fadeAnim] = useState(new Animated.Value(1));
 
   useEffect(() => {
     refresh();
@@ -66,6 +70,21 @@ export const HomeScreen = () => {
     return t(`categories.${categoryId}`);
   };
 
+  const getIncomeSourceIcon = (sourceId: string) => {
+    const icons: Record<string, any> = {
+      salary: Briefcase,
+      bonus: Gift,
+      freelance: Laptop,
+      gift: Gift,
+      other: DollarSign,
+    };
+    return icons[sourceId] || DollarSign;
+  };
+
+  const getIncomeSourceLabel = (sourceId: string) => {
+    return t(`incomeSources.${sourceId}`);
+  };
+
   const handleDeleteExpense = (expenseId: string, expenseDescription: string) => {
     Alert.alert(t('confirmDelete'), expenseDescription || t('expense.amount'), [
       { text: t('cancel'), style: 'cancel' },
@@ -101,6 +120,30 @@ export const HomeScreen = () => {
     setSelectedDate((prev) => addMonths(prev, 1));
   };
 
+  const handleToggleGaugeView = (view: 'revenue' | 'budget') => {
+    if (view === gaugeView) return;
+
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setGaugeView(view);
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // Helper pour vérifier si une dépense correspond à une recurring (badge visuel uniquement)
+  const isExpenseRecurring = (expenseCategory: string, expenseAmount: number, expenseDescription?: string): boolean => {
+    return recurringExpenses.some((rec) => rec.isActive && rec.category === expenseCategory && rec.amount === expenseAmount && (expenseDescription ? rec.description === expenseDescription : true));
+  };
+
   const budgetAmount = budget?.amount || 0;
   const activeRecurring = recurringExpenses.filter((r) => r.isActive);
 
@@ -127,27 +170,43 @@ export const HomeScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              {/* Budget Circle */}
-              <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} />
+              {/* Gauge View Toggle */}
+              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-4 mx-12`}>
+                <TouchableOpacity onPress={() => handleToggleGaugeView('revenue')} style={tw.style('flex-1 py-2 rounded-xl items-center', gaugeView === 'revenue' && 'bg-white')}>
+                  <Text style={tw.style('text-sm font-semibold', gaugeView === 'revenue' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('gaugeToggle.revenue')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleToggleGaugeView('budget')} style={tw.style('flex-1 py-2 rounded-xl items-center', gaugeView === 'budget' && 'bg-white')}>
+                  <Text style={tw.style('text-sm font-semibold', gaugeView === 'budget' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('gaugeToggle.budget')}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Animated Gauge Container */}
+              <Animated.View style={{ opacity: fadeAnim }}>
+                {gaugeView === 'revenue' ? (
+                  <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={totalIncome} />
+                ) : (
+                  <BudgetProgressBar revenue={totalIncome} budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} />
+                )}
+              </Animated.View>
 
               {/* Stats Row */}
               <View style={tw`flex-row justify-between px-4`}>
                 <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-white/70 text-xs mb-1`}>Projection</Text>
-                  <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(budgetAmount)}</Text>
+                  <Text style={tw`text-white/70 text-xs mb-1`}>{totalIncome > 0 ? 'Revenue' : 'Projection'}</Text>
+                  <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(totalIncome > 0 ? totalIncome : budgetAmount)}</Text>
                 </View>
 
                 <View style={tw`w-px h-12 bg-white/20`} />
 
                 <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-white/70 text-xs mb-1`}>Daily budget</Text>
-                  <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(budgetAmount > 0 ? budgetAmount / 30 : 0)}</Text>
+                  <Text style={tw`text-white/70 text-xs mb-1`}>Recurring</Text>
+                  <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(totalRecurring)}</Text>
                 </View>
 
                 <View style={tw`w-px h-12 bg-white/20`} />
 
                 <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-white/70 text-xs mb-1`}>Total Spent</Text>
+                  <Text style={tw`text-white/70 text-xs mb-1`}>Spent</Text>
                   <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(totalSpent)}</Text>
                 </View>
               </View>
@@ -155,7 +214,42 @@ export const HomeScreen = () => {
 
             {/* Content Section */}
             <View style={tw.style('rounded-t-3xl px-5 pt-6', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
-              {/* Recurring Summary */}
+              {/* Income Summary - Si des incomes existent */}
+              {incomes.length > 0 && (
+                <View style={tw`mb-6`}>
+                  <Card>
+                    <View style={tw`flex-row justify-between items-center mb-3`}>
+                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>💰 {t('revenue.incomeMonth')}</Text>
+                      <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(totalIncome)}</Text>
+                    </View>
+                    <View style={tw`gap-2`}>
+                      {incomes.map((income) => {
+                        const IconComponent = getIncomeSourceIcon(income.source);
+                        return (
+                          <View key={income.id} style={tw`flex-row items-center gap-2`}>
+                            <View style={tw.style('w-7 h-7 rounded-full justify-center items-center', `bg-[${colors.primary}]/20`)}>
+                              <IconComponent size={16} color={colors.primary} strokeWidth={2} />
+                            </View>
+                            <View style={tw`flex-1 flex-row items-center gap-1`}>
+                              <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                                {income.description || getIncomeSourceLabel(income.source)}
+                              </Text>
+                              {income.isRecurring && (
+                                <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
+                                  <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
+                                </View>
+                              )}
+                            </View>
+                            <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(income.amount)}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </Card>
+                </View>
+              )}
+
+              {/* Recurring Expenses Summary - Toujours affiché séparément */}
               {activeRecurring.length > 0 && (
                 <View style={tw`mb-6`}>
                   <Card>
@@ -183,7 +277,7 @@ export const HomeScreen = () => {
                 </View>
               )}
 
-              {/* Recent Expenses */}
+              {/* Recent Expenses - Dépenses réelles du mois uniquement */}
               <View style={tw`mb-3`}>
                 <Text style={tw.style('text-lg font-semibold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>Dépenses du mois</Text>
 
@@ -194,7 +288,7 @@ export const HomeScreen = () => {
                 ) : (
                   expenses.slice(0, 10).map((expense) => {
                     const IconComponent = getCategoryIcon(expense.category);
-                    const isRecurring = recurringExpenses.some((rec) => rec.description === expense.description && rec.isActive);
+                    const showRecurringBadge = isExpenseRecurring(expense.category, expense.amount, expense.description);
 
                     return (
                       <Swipeable key={expense.id} renderRightActions={(progress, dragX) => renderRightActions(expense.id, expense.description || '', dragX)} overshootRight={false} rightThreshold={40}>
@@ -206,7 +300,7 @@ export const HomeScreen = () => {
                             <View style={tw`flex-1`}>
                               <View style={tw`flex-row items-center gap-1`}>
                                 <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{getCategoryLabel(expense.category)}</Text>
-                                {isRecurring && (
+                                {showRecurringBadge && (
                                   <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
                                     <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
                                   </View>

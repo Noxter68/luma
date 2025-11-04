@@ -37,13 +37,15 @@ export const initDatabase = () => {
   `);
 
   db.execSync(`
-    CREATE TABLE IF NOT EXISTS recurring_instances (
+    CREATE TABLE IF NOT EXISTS incomes (
       id TEXT PRIMARY KEY,
-      recurring_id TEXT NOT NULL,
-      cycle TEXT NOT NULL,
-      was_confirmed INTEGER DEFAULT 1,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (recurring_id) REFERENCES recurring_expenses(id)
+      month TEXT NOT NULL,
+      amount REAL NOT NULL,
+      source TEXT NOT NULL,
+      description TEXT,
+      is_recurring INTEGER DEFAULT 0,
+      date TEXT NOT NULL,
+      created_at TEXT NOT NULL
     );
   `);
 
@@ -58,12 +60,9 @@ export const initDatabase = () => {
     );
   `);
 
-  db.execSync(`
-    CREATE TABLE IF NOT EXISTS app_state (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
-  `);
+  // Nettoyage : Supprimer les tables inutiles si elles existent
+  db.execSync(`DROP TABLE IF EXISTS recurring_instances;`);
+  db.execSync(`DROP TABLE IF EXISTS app_state;`);
 };
 
 export { db };
