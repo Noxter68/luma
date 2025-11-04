@@ -1,16 +1,20 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useEffect } from 'react';
+// src/screens/HomeScreen.tsx
+
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
+import { useEffect, useRef } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import { BudgetGauge } from '../components/BudgetGauge';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
-import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package } from 'lucide-react-native';
+import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Trash2 } from 'lucide-react-native';
 import { colors, spacing, fontSize } from '../theme/colors';
 import { useTranslation } from '../hooks/useTranslation';
+import { Swipeable } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export const HomeScreen = () => {
-  const { budget, expenses, recurringExpenses, totalSpent, totalRecurring, totalWithRecurring, remaining, refresh } = useBudgetStore();
+  const { budget, expenses, recurringExpenses, totalSpent, totalRecurring, totalWithRecurring, remaining, refresh, deleteExpense } = useBudgetStore();
   const { t, locale } = useTranslation();
 
   useEffect(() => {
@@ -47,10 +51,37 @@ export const HomeScreen = () => {
     return t(`categories.${categoryId}`);
   };
 
+  const handleDeleteExpense = (expenseId: string, expenseDescription: string) => {
+    Alert.alert(t('confirmDelete'), expenseDescription || t('expense.amount'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('delete'),
+        style: 'destructive',
+        onPress: () => deleteExpense(expenseId),
+      },
+    ]);
+  };
+
+  const renderRightActions = (expenseId: string, expenseDescription: string, dragX: any) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <TouchableOpacity onPress={() => handleDeleteExpense(expenseId, expenseDescription)} style={styles.deleteAction}>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <Trash2 size={24} color={colors.white} strokeWidth={2} />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
   const activeRecurring = recurringExpenses.filter((r) => r.isActive);
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         {/* Budget Gauge */}
         <Card>
@@ -111,31 +142,33 @@ export const HomeScreen = () => {
             const isRecurring = recurringExpenses.some((rec) => rec.description === expense.description && rec.isActive);
 
             return (
-              <Card key={expense.id} style={styles.expenseCard}>
-                <View style={styles.expenseRow}>
-                  <View style={styles.expenseIcon}>
-                    <IconComponent size={20} color={colors.sage} strokeWidth={2} />
-                  </View>
-                  <View style={styles.expenseInfo}>
-                    <View style={styles.categoryRow}>
-                      <Text style={styles.expenseCategory}>{getCategoryLabel(expense.category)}</Text>
-                      {isRecurring && (
-                        <View style={styles.recurringBadge}>
-                          <Text style={styles.recurringText}>↻</Text>
-                        </View>
-                      )}
+              <Swipeable key={expense.id} renderRightActions={(progress, dragX) => renderRightActions(expense.id, expense.description || '', dragX)} overshootRight={false} rightThreshold={40}>
+                <Card style={styles.expenseCard}>
+                  <View style={styles.expenseRow}>
+                    <View style={styles.expenseIcon}>
+                      <IconComponent size={20} color={colors.sage} strokeWidth={2} />
                     </View>
-                    {expense.description && <Text style={styles.expenseDescription}>{expense.description}</Text>}
-                    <Text style={styles.expenseDate}>{formatDate(expense.date)}</Text>
+                    <View style={styles.expenseInfo}>
+                      <View style={styles.categoryRow}>
+                        <Text style={styles.expenseCategory}>{getCategoryLabel(expense.category)}</Text>
+                        {isRecurring && (
+                          <View style={styles.recurringBadge}>
+                            <Text style={styles.recurringText}>↻</Text>
+                          </View>
+                        )}
+                      </View>
+                      {expense.description && <Text style={styles.expenseDescription}>{expense.description}</Text>}
+                      <Text style={styles.expenseDate}>{formatDate(expense.date)}</Text>
+                    </View>
+                    <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
                   </View>
-                  <Text style={styles.expenseAmount}>{formatCurrency(expense.amount)}</Text>
-                </View>
-              </Card>
+                </Card>
+              </Swipeable>
             );
           })
         )}
       </ScrollView>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -294,5 +327,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.lavender,
     fontWeight: '600',
+  },
+  deleteAction: {
+    backgroundColor: '#E63946',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 24,
+    marginBottom: 12,
   },
 });

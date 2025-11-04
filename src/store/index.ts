@@ -1,3 +1,5 @@
+// src/store/index.ts
+
 import { create } from 'zustand';
 import { format } from 'date-fns';
 import { Budget, Expense, RecurringExpense } from '../types';
@@ -6,6 +8,7 @@ import {
   createBudget as dbCreateBudget,
   getExpensesByMonth,
   createExpense as dbCreateExpense,
+  deleteExpense as dbDeleteExpense,
   getAllRecurringExpenses,
   createRecurringExpense as dbCreateRecurringExpense,
   updateRecurringExpense as dbUpdateRecurringExpense,
@@ -20,7 +23,7 @@ interface BudgetStore {
   expenses: Expense[];
   recurringExpenses: RecurringExpense[];
 
-  // Computed
+  // Computed - maintenant en propriétés normales
   totalSpent: number;
   totalRecurring: number;
   totalWithRecurring: number;
@@ -33,11 +36,13 @@ interface BudgetStore {
   loadRecurringExpenses: () => void;
   setBudget: (amount: number) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'budgetId' | 'createdAt'>) => void;
+  deleteExpense: (id: string) => void;
   addRecurringExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   updateRecurringExpense: (expense: RecurringExpense) => void;
   deleteRecurringExpense: (id: string) => void;
   processRecurringExpenses: () => void;
   refresh: () => void;
+  computeTotals: () => void;
 }
 
 export const useBudgetStore = create<BudgetStore>((set, get) => ({
@@ -46,24 +51,26 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
   expenses: [],
   recurringExpenses: [],
 
-  get totalSpent() {
-    return get().expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  },
+  // Computed - valeurs par défaut
+  totalSpent: 0,
+  totalRecurring: 0,
+  totalWithRecurring: 0,
+  remaining: 0,
 
-  get totalRecurring() {
-    return get()
-      .recurringExpenses.filter((r) => r.isActive)
-      .reduce((sum, r) => sum + r.amount, 0);
-  },
+  // Nouvelle fonction pour recalculer les totaux
+  computeTotals: () => {
+    const state = get();
+    const totalSpent = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalRecurring = state.recurringExpenses.filter((r) => r.isActive).reduce((sum, r) => sum + r.amount, 0);
+    const totalWithRecurring = totalSpent + totalRecurring;
+    const remaining = state.budget ? state.budget.amount - totalWithRecurring : 0;
 
-  get totalWithRecurring() {
-    return get().totalSpent + get().totalRecurring;
-  },
-
-  get remaining() {
-    const budget = get().budget;
-    if (!budget) return 0;
-    return budget.amount - get().totalWithRecurring;
+    set({
+      totalSpent,
+      totalRecurring,
+      totalWithRecurring,
+      remaining,
+    });
   },
 
   setCurrentMonth: (month: string) => {
@@ -75,17 +82,20 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const month = get().currentMonth;
     const budget = getBudgetByMonth(month);
     set({ budget });
+    get().computeTotals();
   },
 
   loadExpenses: () => {
     const month = get().currentMonth;
     const expenses = getExpensesByMonth(month);
     set({ expenses });
+    get().computeTotals();
   },
 
   loadRecurringExpenses: () => {
     const recurring = getAllRecurringExpenses();
     set({ recurringExpenses: recurring });
+    get().computeTotals();
   },
 
   setBudget: (amount: number) => {
@@ -99,6 +109,7 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
 
     dbCreateBudget(budget);
     set({ budget });
+    get().computeTotals();
   },
 
   addExpense: (expenseData) => {
@@ -118,6 +129,11 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     };
 
     dbCreateExpense(expense);
+    get().loadExpenses();
+  },
+
+  deleteExpense: (id: string) => {
+    dbDeleteExpense(id);
     get().loadExpenses();
   },
 
@@ -146,7 +162,6 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const currentMonth = get().currentMonth;
     const lastProcessed = getLastProcessedMonth();
 
-    // Si déjà traité ce mois, on skip
     if (lastProcessed === currentMonth) {
       return;
     }
@@ -154,14 +169,12 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const recurring = getAllRecurringExpenses();
     const { budget } = get();
 
-    // Créer le budget si nécessaire
     if (!budget) {
       get().setBudget(0);
     }
 
     const budgetId = budget?.id || `budget-${currentMonth}`;
 
-    // Ajouter seulement les dépenses récurrentes actives
     recurring
       .filter((rec) => rec.isActive)
       .forEach((rec) => {
@@ -177,7 +190,6 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
         dbCreateExpense(expense);
       });
 
-    // Marquer le mois comme traité
     setLastProcessedMonth(currentMonth);
     get().loadExpenses();
   },

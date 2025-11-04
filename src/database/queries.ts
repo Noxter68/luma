@@ -97,6 +97,10 @@ export const createRecurringExpense = (recurring: RecurringExpense): void => {
   ]);
 };
 
+export const deleteExpense = (id: string): void => {
+  db.runSync('DELETE FROM expenses WHERE id = ?', [id]);
+};
+
 export const updateRecurringExpense = (recurring: RecurringExpense): void => {
   db.runSync('UPDATE recurring_expenses SET amount = ?, category = ?, description = ?, is_active = ? WHERE id = ?', [
     recurring.amount,
