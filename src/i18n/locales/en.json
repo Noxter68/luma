@@ -161,6 +161,7 @@
     "consumed": "Consumed",
     "remaining": "Remaining",
     "noBudget": "No budget set",
+    "noRevenue": "No revenue set",
     "onTrack": "On track",
     "careful": "Be careful",
     "nearLimit": "Near limit",

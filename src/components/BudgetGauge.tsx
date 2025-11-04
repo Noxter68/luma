@@ -2,17 +2,19 @@ import { View, Text } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import tw from '../lib/tailwind';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface BudgetGaugeProps {
   budget: number;
   spent: number;
   recurring: number;
   income: number;
-  mode: 'revenue' | 'budget'; // ← AJOUTE ÇA
+  mode: 'revenue' | 'budget';
 }
 
 export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGaugeProps) => {
   const { isDark, colors } = useTheme();
+  const { t } = useTranslation();
 
   const safeIncome = Number(income) || 0;
   const safeRecurring = Number(recurring) || 0;
@@ -48,6 +50,16 @@ export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGa
   const displayPercentage = getDisplayPercentage();
 
   const getStatus = () => {
+    // Si aucun budget défini en mode budget
+    if (safeBudget === 0 && mode === 'budget') {
+      return { label: t('budgetProgress.noBudget'), color: isDark ? colors.dark.textTertiary : colors.light.textTertiary };
+    }
+
+    // Si aucun revenu défini en mode revenue
+    if (safeIncome === 0 && mode === 'revenue') {
+      return { label: t('budgetProgress.noRevenue'), color: isDark ? colors.dark.textTertiary : colors.light.textTertiary };
+    }
+
     if (remainingPercentage >= 80) return { label: 'Excellent', color: colors.primary };
     if (remainingPercentage >= 50) return { label: 'Parfait', color: colors.primaryLight };
     if (remainingPercentage >= 25) return { label: 'Bon rythme', color: '#F4A460' };

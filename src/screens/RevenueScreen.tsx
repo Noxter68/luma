@@ -1,11 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
-import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { Info, DollarSign, Percent, Home, ShoppingCart, Popcorn, PiggyBank, Plus, Trash2, TrendingUp } from 'lucide-react-native';
+import { DollarSign, Percent, Home, ShoppingCart, Popcorn, PiggyBank, Plus, Trash2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +26,9 @@ export const RevenueScreen = ({ navigation }: any) => {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [showPercentage, setShowPercentage] = useState(false);
-  const [showInfoModal, setShowInfoModal] = useState(false);
+
+  // Animation pour le toggle
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     refresh();
@@ -37,6 +39,15 @@ export const RevenueScreen = ({ navigation }: any) => {
       setBudgetAmount(budget.amount.toString());
     }
   }, [budget, isEditingBudget]);
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: selectedTab === 'revenue' ? 0 : 1,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 100,
+    }).start();
+  }, [selectedTab]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -55,7 +66,6 @@ export const RevenueScreen = ({ navigation }: any) => {
       return;
     }
 
-    // ⚠️ GARDE-FOU: Budget ne peut pas dépasser Revenue - Recurring
     const maxBudget = totalIncome - totalRecurring;
 
     if (totalIncome > 0 && parsedAmount > maxBudget) {
@@ -100,19 +110,37 @@ export const RevenueScreen = ({ navigation }: any) => {
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
           <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Header Section with Gradient */}
+            {/* Header Section */}
             <View style={tw`px-6 pt-4 pb-6`}>
-              {/* Tab Selector - Même taille que Home */}
-              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-6 mx-12`}>
-                <TouchableOpacity onPress={() => setSelectedTab('revenue')} style={tw.style('flex-1 py-2 rounded-xl items-center', selectedTab === 'revenue' && 'bg-white')}>
+              {/* Tab Selector with fluid animation */}
+              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-6 mx-12 relative`}>
+                {/* Sliding background */}
+                <Animated.View
+                  style={[
+                    tw`absolute top-1 bottom-1 left-1 rounded-xl bg-white`,
+                    {
+                      width: '48%',
+                      transform: [
+                        {
+                          translateX: slideAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, 125], // Distance ajustée pour rester dans le container
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+
+                <TouchableOpacity onPress={() => setSelectedTab('revenue')} style={tw`flex-1 py-2 rounded-xl items-center z-10`}>
                   <Text style={tw.style('text-sm font-semibold', selectedTab === 'revenue' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('revenue.title')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setSelectedTab('budget')} style={tw.style('flex-1 py-2 rounded-xl items-center', selectedTab === 'budget' && 'bg-white')}>
+                <TouchableOpacity onPress={() => setSelectedTab('budget')} style={tw`flex-1 py-2 rounded-xl items-center z-10`}>
                   <Text style={tw.style('text-sm font-semibold', selectedTab === 'budget' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('budget.title')}</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Revenue Tab Content */}
+              {/* Revenue Tab */}
               {selectedTab === 'revenue' && (
                 <View style={tw`items-center`}>
                   <Text style={tw`text-white/80 text-base mb-3`}>{t('revenue.totalRevenue')}</Text>
@@ -124,17 +152,15 @@ export const RevenueScreen = ({ navigation }: any) => {
                 </View>
               )}
 
-              {/* Budget Tab Content - Plus propre et pro */}
+              {/* Budget Tab */}
               {selectedTab === 'budget' && (
                 <View style={tw`items-center`}>
                   {!isEditingBudget ? (
                     <>
-                      {/* Budget Display */}
                       <View style={tw`items-center mb-6`}>
                         <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
                         <Text style={tw`text-6xl font-bold text-white mb-3`}>{formatCurrency(budgetAmountValue)}</Text>
 
-                        {/* Budget indicator - Plus compact */}
                         {totalIncome > 0 && totalRecurring > 0 && (
                           <View style={tw`flex-row items-center gap-2 mb-4`}>
                             <View style={tw`flex-row items-center gap-1`}>
@@ -151,13 +177,11 @@ export const RevenueScreen = ({ navigation }: any) => {
                         )}
                       </View>
 
-                      {/* Action Button */}
                       <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40`}>
                         <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
                       </TouchableOpacity>
                     </>
                   ) : (
-                    /* Edit Mode - Inchangé */
                     <View style={tw`w-full items-center`}>
                       <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
                       <View style={tw`w-full px-8`}>
@@ -169,8 +193,6 @@ export const RevenueScreen = ({ navigation }: any) => {
                           style={tw`text-5xl font-bold text-white text-center py-2 border-b-2 border-white/30 mb-6 min-h-20`}
                           placeholderTextColor="rgba(255,255,255,0.3)"
                           autoFocus
-                          multiline={false}
-                          textAlignVertical="center"
                         />
                       </View>
                       <View style={tw`flex-row gap-3 w-full px-8`}>
@@ -206,8 +228,18 @@ export const RevenueScreen = ({ navigation }: any) => {
                         return (
                           <Card key={income.id} style={tw`mb-3`}>
                             <View style={tw`flex-row items-center`}>
-                              <View style={tw.style('w-10 h-10 rounded-full justify-center items-center mr-3', `bg-[${colors.primary}]/20`)}>
-                                <IconComponent size={20} color={colors.primary} strokeWidth={2} />
+                              <View style={tw`w-9 h-9 rounded-lg mr-3 overflow-hidden`}>
+                                <LinearGradient
+                                  colors={isDark ? [colors.primary, colors.primaryDark] : [colors.primaryLight, colors.primary]}
+                                  start={{ x: 0, y: 0 }}
+                                  end={{ x: 1, y: 1 }}
+                                  style={tw`w-full h-full items-center justify-center`}
+                                >
+                                  <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
+                                    <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
+                                  </View>
+                                  <IconComponent size={18} color="white" strokeWidth={2.5} />
+                                </LinearGradient>
                               </View>
                               <View style={tw`flex-1`}>
                                 <View style={tw`flex-row items-center gap-1`}>
@@ -239,37 +271,34 @@ export const RevenueScreen = ({ navigation }: any) => {
                 {/* Budget Allocation */}
                 {selectedTab === 'budget' && (
                   <View>
-                    {/* Budget Overview Card - Si revenue existe */}
+                    {/* Overview Card - Minimalist */}
                     {totalIncome > 0 && budgetAmountValue > 0 && (
                       <Card style={tw`mb-4`}>
-                        <View style={tw`flex-row items-center justify-between mb-3`}>
-                          <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budgetProgress.overview')}</Text>
-                          <TrendingUp size={20} color={colors.primary} strokeWidth={2.5} />
-                        </View>
+                        <Text style={tw.style('text-sm font-medium mb-3', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetProgress.overview')}</Text>
 
-                        <View style={tw`mb-3`}>
-                          <View style={tw`flex-row justify-between mb-2`}>
-                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetProgress.totalRevenue')}</Text>
+                        <View style={tw`gap-2 mb-3`}>
+                          <View style={tw`flex-row justify-between`}>
+                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('budgetProgress.totalRevenue')}</Text>
                             <Text style={tw.style('text-sm font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(totalIncome)}</Text>
                           </View>
-                          <View style={tw`flex-row justify-between mb-2`}>
-                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetProgress.budgetLimit')}</Text>
+                          <View style={tw`flex-row justify-between`}>
+                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('budgetProgress.budgetLimit')}</Text>
                             <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(budgetAmountValue)}</Text>
                           </View>
+                        </View>
 
-                          {/* Progress Bar */}
-                          <View style={tw.style('h-2 rounded-full overflow-hidden mt-2', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
-                            <View style={[tw.style('h-full', `bg-[${colors.primary}]`), { width: `${Math.min((budgetAmountValue / totalIncome) * 100, 100)}%` }]} />
-                          </View>
+                        {/* Simple Progress Bar */}
+                        <View style={tw.style('h-1.5 rounded-full overflow-hidden', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
+                          <View style={[tw.style('h-full', `bg-[${colors.primary}]`), { width: `${Math.min((budgetAmountValue / totalIncome) * 100, 100)}%` }]} />
+                        </View>
 
-                          <View style={tw`flex-row justify-between mt-2`}>
-                            <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                              {((budgetAmountValue / totalIncome) * 100).toFixed(0)}% {t('budgetProgress.ofRevenue')}
-                            </Text>
-                            <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>
-                              {formatCurrency(totalIncome - budgetAmountValue)} {t('budgetProgress.toSave')}
-                            </Text>
-                          </View>
+                        <View style={tw`flex-row justify-between mt-2`}>
+                          <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                            {((budgetAmountValue / totalIncome) * 100).toFixed(0)}% {t('budgetProgress.ofRevenue')}
+                          </Text>
+                          <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>
+                            {formatCurrency(totalIncome - budgetAmountValue)} {t('budgetProgress.toSave')}
+                          </Text>
                         </View>
                       </Card>
                     )}
@@ -329,7 +358,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                       })}
                     </Card>
 
-                    <Text style={tw.style('text-xs text-center italic px-2 mt-3 mb-4', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('tipText')}</Text>
+                    <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('tipText')}</Text>
                   </View>
                 )}
               </LinearGradient>
@@ -337,21 +366,6 @@ export const RevenueScreen = ({ navigation }: any) => {
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
-
-      {/* Info Modal */}
-      <Modal visible={showInfoModal} transparent animationType="fade" onRequestClose={() => setShowInfoModal(false)}>
-        <TouchableOpacity activeOpacity={1} onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/60 justify-center items-center px-8`}>
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-            <View style={tw.style('rounded-3xl p-6 max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
-              <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>💰 {t('budget.monthlyBudget')}</Text>
-              <Text style={tw.style('text-base leading-6 mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetInfo')}</Text>
-              <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
-                <Text style={tw`text-white text-base font-semibold`}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </View>
   );
 };

@@ -23,6 +23,7 @@ export const HomeScreen = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [gaugeView, setGaugeView] = useState<'revenue' | 'budget'>('revenue');
   const [fadeAnim] = useState(new Animated.Value(1));
+  const slideAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
     refresh();
@@ -122,6 +123,15 @@ export const HomeScreen = () => {
   const handleToggleGaugeView = (view: 'revenue' | 'budget') => {
     if (view === gaugeView) return;
 
+    // Slide animation
+    Animated.spring(slideAnim, {
+      toValue: view === 'revenue' ? 0 : 1,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 100,
+    }).start();
+
+    // Fade animation
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 150,
@@ -165,11 +175,29 @@ export const HomeScreen = () => {
               </View>
 
               {/* Gauge View Toggle */}
-              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-4 mx-12`}>
-                <TouchableOpacity onPress={() => handleToggleGaugeView('revenue')} style={tw.style('flex-1 py-2 rounded-xl items-center', gaugeView === 'revenue' && 'bg-white')}>
+              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-4 mx-12 relative`}>
+                {/* Sliding background */}
+                <Animated.View
+                  style={[
+                    tw`absolute top-1 bottom-1 left-1 rounded-xl bg-white`,
+                    {
+                      width: '48%',
+                      transform: [
+                        {
+                          translateX: slideAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, 125], // Distance ajustée pour rester dans le container
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+
+                <TouchableOpacity onPress={() => handleToggleGaugeView('revenue')} style={tw`flex-1 py-2 rounded-xl items-center z-10`}>
                   <Text style={tw.style('text-sm font-semibold', gaugeView === 'revenue' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('gaugeToggle.revenue')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleToggleGaugeView('budget')} style={tw.style('flex-1 py-2 rounded-xl items-center', gaugeView === 'budget' && 'bg-white')}>
+                <TouchableOpacity onPress={() => handleToggleGaugeView('budget')} style={tw`flex-1 py-2 rounded-xl items-center z-10`}>
                   <Text style={tw.style('text-sm font-semibold', gaugeView === 'budget' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('gaugeToggle.budget')}</Text>
                 </TouchableOpacity>
               </View>
