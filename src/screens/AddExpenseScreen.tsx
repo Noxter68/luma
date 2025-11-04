@@ -1,23 +1,15 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
-import { Input } from '../components/Input';
 import tw from '../lib/tailwind';
-import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package } from 'lucide-react-native';
-import { Button } from '../components/Buttons';
+import { Check, ChevronRight } from 'lucide-react-native';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-
-const CATEGORIES = [
-  { id: 'rent', icon: Home },
-  { id: 'food', icon: ShoppingCart },
-  { id: 'transport', icon: Car },
-  { id: 'entertainment', icon: Popcorn },
-  { id: 'subscription', icon: Smartphone },
-  { id: 'utilities', icon: Lightbulb },
-  { id: 'other', icon: Package },
-];
+import { LinearGradient } from 'expo-linear-gradient';
+import { getPaletteGradient } from '../lib/palettes';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { getCategoryById } from '../utils/categories';
 
 interface AddExpenseScreenProps {
   navigation: any;
@@ -25,8 +17,8 @@ interface AddExpenseScreenProps {
 
 export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
   const { addExpense } = useBudgetStore();
-  const { t } = useTranslation();
-  const { isDark, colors } = useTheme();
+  const { t, locale } = useTranslation();
+  const { isDark, colors, palette } = useTheme();
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -67,48 +59,114 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     }
   };
 
+  const handleSelectCategory = (categoryId: string) => {
+    setCategory(categoryId);
+  };
+
+  const selectedCategoryData = category ? getCategoryById(category) : null;
+  const headerGradient = getPaletteGradient(palette, isDark, 'header');
+
   return (
-    <View style={tw.style('flex-1', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
-      <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-6`}>
-        <Card>
-          <Input label={t('expense.amount')} value={amount} onChangeText={setAmount} placeholder="0.00" keyboardType="decimal-pad" />
+    <View style={tw`flex-1`}>
+      <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
+        <SafeAreaView edges={['top']} style={tw`flex-1`}>
+          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
+            {/* Header Section */}
+            <View style={tw`px-6 pt-4 pb-6`}>
+              <View style={tw`items-center`}>
+                <Text style={tw`text-white/80 text-base mb-3`}>{t('expense.amount')}</Text>
 
-          <Text style={tw.style('text-sm mb-2 font-medium', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expense.category')}</Text>
-          <View style={tw`flex-row flex-wrap gap-2 mb-4`}>
-            {CATEGORIES.map((cat) => {
-              const IconComponent = cat.icon;
-              const isSelected = category === cat.id;
+                {/* Amount Input */}
+                <View style={tw`w-full px-8`}>
+                  <TextInput
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="0.00"
+                    keyboardType="decimal-pad"
+                    style={tw`text-6xl font-bold text-white text-center py-2 border-b-2 border-white/30 min-h-20`}
+                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    autoFocus
+                    multiline={false}
+                    textAlignVertical="center"
+                  />
+                </View>
+              </View>
+            </View>
 
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  onPress={() => setCategory(cat.id)}
-                  style={tw.style(
-                    'w-[30%] aspect-square rounded-2xl border-2 justify-center items-center p-2',
-                    isDark ? `bg-[${colors.dark.surface}]` : 'bg-white',
-                    isSelected ? `border-[${colors.primary}] bg-[${colors.primary}]/10` : `border-[${isDark ? colors.dark.border : colors.light.border}]`
-                  )}
-                >
-                  <IconComponent size={32} color={isSelected ? colors.primary : isDark ? colors.dark.textSecondary : colors.light.textSecondary} strokeWidth={2} />
-                  <Text
-                    style={tw.style('text-xs text-center mt-1', isSelected ? `text-[${colors.primary}] font-semibold` : `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}
+            {/* Content Section */}
+            <View style={tw`px-6`}>
+              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
+                {/* Category Selection Button */}
+                <Card style={tw`p-0 overflow-hidden mb-4`}>
+                  <View style={tw`px-4 py-3 border-b ${isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`}`}>
+                    <Text style={tw.style('text-sm font-medium', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expense.category')}</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      navigation.navigate('CategorySelector', {
+                        selectedCategory: category,
+                        onSelect: handleSelectCategory,
+                      })
+                    }
+                    style={tw`px-4 py-4 flex-row items-center`}
                   >
-                    {t(`categories.${cat.id}`)}
-                  </Text>
+                    {selectedCategoryData ? (
+                      <>
+                        {/* Selected Category Icon */}
+                        <View style={tw`w-9 h-9 rounded-lg mr-3 overflow-hidden`}>
+                          <LinearGradient
+                            colors={isDark ? [colors.primary, colors.primaryDark] : [colors.primaryLight, colors.primary]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={tw`w-full h-full items-center justify-center`}
+                          >
+                            <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
+                              <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
+                            </View>
+                            <selectedCategoryData.icon size={18} color="white" strokeWidth={2.5} />
+                          </LinearGradient>
+                        </View>
+
+                        {/* Label */}
+                        <Text style={tw.style('flex-1 text-base font-medium', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t(selectedCategoryData.translationKey)}</Text>
+                      </>
+                    ) : (
+                      <Text style={tw.style('flex-1 text-base', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('selectCategory')}</Text>
+                    )}
+
+                    <ChevronRight size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
+                  </TouchableOpacity>
+                </Card>
+
+                {/* Description Input */}
+                <Card style={tw`p-0 overflow-hidden mb-4`}>
+                  <View style={tw`px-4 py-3 border-b ${isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`}`}>
+                    <Text style={tw.style('text-sm font-medium', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expense.description')}</Text>
+                  </View>
+
+                  <View style={tw`px-4 py-3`}>
+                    <TextInput
+                      value={description}
+                      onChangeText={setDescription}
+                      placeholder={t('descriptionPlaceholder')}
+                      multiline
+                      numberOfLines={3}
+                      style={tw.style('text-sm min-h-20', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}
+                      placeholderTextColor={isDark ? colors.dark.textTertiary : colors.light.textTertiary}
+                    />
+                  </View>
+                </Card>
+
+                {/* Save Button */}
+                <TouchableOpacity onPress={handleSave} disabled={loading} style={tw.style('py-4 rounded-xl items-center', loading ? 'opacity-50' : '', `bg-[${colors.primary}]`)}>
+                  <Text style={tw`text-white text-base font-semibold`}>{loading ? '...' : t('expense.save')}</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Input label={t('expense.description')} value={description} onChangeText={setDescription} placeholder={t('descriptionPlaceholder')} multiline />
-        </Card>
-
-        <View style={tw`mt-6`}>
-          <Button onPress={handleSave} loading={loading}>
-            {t('expense.save')}
-          </Button>
-        </View>
-      </ScrollView>
+              </LinearGradient>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </LinearGradient>
     </View>
   );
 };

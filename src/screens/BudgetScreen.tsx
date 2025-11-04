@@ -62,7 +62,7 @@ export const BudgetScreen = () => {
 
   return (
     <View style={tw`flex-1`}>
-      <LinearGradient colors={headerGradient} style={tw`flex-1`}>
+      <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
           <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
             {/* Header Section with Gradient */}
@@ -167,9 +167,9 @@ export const BudgetScreen = () => {
                             <View style={tw.style('flex-1 h-1.5 rounded-full overflow-hidden mr-2', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
                               <View style={[tw.style('h-full rounded-full', `bg-[${colors.primary}]`), { width: `${category.percentage * 100}%` }]} />
                             </View>
-                            <Text style={tw.style('text-xs font-medium w-10 text-right', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                            {/* <Text style={tw.style('text-xs font-medium w-10 text-right', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
                               {(category.percentage * 100).toFixed(0)}%
-                            </Text>
+                            </Text> */}
                           </View>
                         </View>
 

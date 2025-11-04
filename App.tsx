@@ -16,6 +16,7 @@ import './src/i18n';
 import { useTranslation } from './src/hooks/useTranslation';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { Home, Wallet, PlusCircle, Repeat, Settings } from 'lucide-react-native';
+import { CategorySelectorScreen } from './src/screens/CategorySelectorScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -58,12 +59,14 @@ function TabNavigator() {
           headerShown: false,
         }}
       />
+
       <Tab.Screen
         name="AddExpense"
         component={AddExpenseScreen}
         options={{
           title: t('addExpense'),
           tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -107,6 +110,14 @@ function AppNavigator() {
         options={{
           title: t('addRecurringExpense'),
           presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="CategorySelector"
+        component={CategorySelectorScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
