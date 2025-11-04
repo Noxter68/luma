@@ -14,7 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BudgetGauge } from '../components/BudgetGauge';
-import { BudgetProgressBar } from '../components/BudgetProgressBar';
 
 export const HomeScreen = () => {
   const { budget, expenses, recurringExpenses, incomes, totalSpent, totalRecurring, totalIncome, refresh, deleteExpense, setCurrentMonth, currentMonth } = useBudgetStore();
@@ -123,14 +122,12 @@ export const HomeScreen = () => {
   const handleToggleGaugeView = (view: 'revenue' | 'budget') => {
     if (view === gaugeView) return;
 
-    // Fade out
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 150,
       useNativeDriver: true,
     }).start(() => {
       setGaugeView(view);
-      // Fade in
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 150,
@@ -139,15 +136,12 @@ export const HomeScreen = () => {
     });
   };
 
-  // Helper pour vérifier si une dépense correspond à une recurring (badge visuel uniquement)
   const isExpenseRecurring = (expenseCategory: string, expenseAmount: number, expenseDescription?: string): boolean => {
     return recurringExpenses.some((rec) => rec.isActive && rec.category === expenseCategory && rec.amount === expenseAmount && (expenseDescription ? rec.description === expenseDescription : true));
   };
 
   const budgetAmount = budget?.amount || 0;
   const activeRecurring = recurringExpenses.filter((r) => r.isActive);
-
-  // Gradient adapté à la palette
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
 
   return (
@@ -182,13 +176,7 @@ export const HomeScreen = () => {
 
               {/* Animated Gauge Container */}
               <Animated.View style={{ opacity: fadeAnim }}>
-                <BudgetGauge
-                  budget={budgetAmount}
-                  spent={totalSpent}
-                  recurring={totalRecurring}
-                  income={totalIncome}
-                  mode={gaugeView} // ← AJOUTE ÇA (gaugeView est déjà 'revenue' | 'budget')
-                />
+                <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={totalIncome} mode={gaugeView} />
               </Animated.View>
 
               {/* Stats Row */}
