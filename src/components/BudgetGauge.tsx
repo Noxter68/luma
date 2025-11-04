@@ -8,22 +8,34 @@ interface BudgetGaugeProps {
   spent: number;
   recurring: number;
   income: number;
+  mode: 'revenue' | 'budget'; // ← AJOUTE ÇA
 }
 
-export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugeProps) => {
+export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGaugeProps) => {
   const { isDark, colors } = useTheme();
 
-  const safeBudget = Number(budget) || 0;
-  const safeSpent = Number(spent) || 0;
-  const safeRecurring = Number(recurring) || 0;
   const safeIncome = Number(income) || 0;
+  const safeRecurring = Number(recurring) || 0;
+  const safeSpent = Number(spent) || 0;
+  const safeBudget = Number(budget) || 0;
 
-  // La gauge est TOUJOURS basée sur le revenue total du mois
-  // Revenue - Recurring Expenses - Spent = Ce qui reste
-  const totalAvailable = safeIncome > 0 ? safeIncome : safeBudget;
-  const totalConsumed = safeRecurring + safeSpent;
-  const remaining = totalAvailable - totalConsumed;
-  const remainingPercentage = totalAvailable > 0 ? (remaining / totalAvailable) * 100 : 0;
+  // Calcul selon le mode
+  let remaining: number;
+  let total: number;
+  let remainingPercentage: number;
+
+  if (mode === 'revenue') {
+    // MODE REVENUE : Tout par rapport au revenue total
+    const availableAfterRecurring = safeIncome > 0 ? safeIncome - safeRecurring : safeBudget;
+    remaining = availableAfterRecurring - safeSpent;
+    total = safeIncome > 0 ? safeIncome : safeBudget;
+    remainingPercentage = total > 0 ? (remaining / total) * 100 : 0;
+  } else {
+    // MODE BUDGET : Tout par rapport au budget défini
+    remaining = safeBudget - safeSpent;
+    total = safeBudget;
+    remainingPercentage = safeBudget > 0 ? (remaining / safeBudget) * 100 : 0;
+  }
 
   const getDisplayPercentage = () => {
     if (isNaN(remainingPercentage)) return '0';
@@ -35,7 +47,6 @@ export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugePro
 
   const displayPercentage = getDisplayPercentage();
 
-  // Statut et couleur adaptés au thème
   const getStatus = () => {
     if (remainingPercentage >= 80) return { label: 'Excellent', color: colors.primary };
     if (remainingPercentage >= 50) return { label: 'Parfait', color: colors.primaryLight };
@@ -46,8 +57,6 @@ export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugePro
   };
 
   const status = getStatus();
-
-  // Couleur de fond adaptée au thème
   const backgroundColor = isDark ? colors.dark.border : colors.light.border;
 
   return (
@@ -62,7 +71,7 @@ export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugePro
         <AnimatedCircularProgress
           size={240}
           width={20}
-          fill={Math.max(0, remainingPercentage)}
+          fill={Math.max(0, Math.min(100, remainingPercentage))}
           tintColor={status.color}
           backgroundColor="transparent"
           rotation={270}
@@ -72,8 +81,8 @@ export const BudgetGauge = ({ budget, spent, recurring, income }: BudgetGaugePro
         />
       </View>
 
-      {/* Center text */}
-      <View style={tw`items-center justify-center -mt-36 mb-6`}>
+      {/* Center text - Aligned with arc center */}
+      <View style={[tw`items-center justify-center absolute`, { top: 120 }]}>
         <Text style={[tw`text-4xl font-bold mb-1`, { color: status.color }]}>{displayPercentage}%</Text>
         <Text style={[tw`text-lg font-semibold`, { color: status.color }]}>{status.label}</Text>
       </View>

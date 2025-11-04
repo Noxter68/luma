@@ -155,6 +155,8 @@
   "budgetProgress": {
     "totalRevenue": "Revenue Total",
     "budgetLimit": "Limite Budget",
+    "availableBudget": "Budget disponible",
+    "budgetTooHigh": "Le budget ne peut pas dépasser le montant disponible",
     "ofRevenue": "du revenue",
     "consumed": "Consommé",
     "remaining": "Restant",

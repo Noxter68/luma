@@ -72,11 +72,15 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const totalSpent = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalRecurring = state.recurringExpenses.filter((r) => r.isActive).reduce((sum, r) => sum + r.amount, 0);
     const totalIncome = state.incomes.reduce((sum, inc) => sum + inc.amount, 0);
-    const totalWithRecurring = totalSpent + totalRecurring;
 
-    // Calcul basé sur les incomes si disponibles, sinon sur le budget
-    const availableAmount = totalIncome > 0 ? totalIncome - totalRecurring : state.budget?.amount || 0;
-    const remaining = availableAmount - totalSpent;
+    // Budget = Revenue - Recurring (argent disponible pour expenses variables)
+    const actualBudget = totalIncome > 0 ? totalIncome - totalRecurring : state.budget?.amount || 0;
+
+    // Remaining = Budget disponible - Expenses variables
+    const remaining = actualBudget - totalSpent;
+
+    // totalWithRecurring pour compatibilité (mais ne devrait plus être utilisé)
+    const totalWithRecurring = totalSpent + totalRecurring;
 
     set({
       totalSpent,

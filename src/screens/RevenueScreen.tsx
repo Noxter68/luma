@@ -19,7 +19,7 @@ const ALLOCATION_CATEGORIES = [
 ];
 
 export const RevenueScreen = ({ navigation }: any) => {
-  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome } = useBudgetStore();
+  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, totalRecurring } = useBudgetStore();
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [selectedTab, setSelectedTab] = useState<'revenue' | 'budget'>('revenue');
@@ -52,6 +52,18 @@ export const RevenueScreen = ({ navigation }: any) => {
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       Alert.alert(t('error'), t('invalidAmount'));
+      return;
+    }
+
+    // ⚠️ GARDE-FOU: Budget ne peut pas dépasser Revenue - Recurring
+    const maxBudget = totalIncome - totalRecurring;
+
+    if (totalIncome > 0 && parsedAmount > maxBudget) {
+      Alert.alert(
+        t('error'),
+        `${t('budgetProgress.budgetTooHigh')}\n\n` + `Revenue: ${formatCurrency(totalIncome)}\n` + `Recurring: ${formatCurrency(totalRecurring)}\n` + `Max budget: ${formatCurrency(maxBudget)}`,
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -90,13 +102,13 @@ export const RevenueScreen = ({ navigation }: any) => {
           <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
             {/* Header Section with Gradient */}
             <View style={tw`px-6 pt-4 pb-6`}>
-              {/* Tab Selector */}
-              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-6`}>
-                <TouchableOpacity onPress={() => setSelectedTab('revenue')} style={tw.style('flex-1 py-3 rounded-xl items-center', selectedTab === 'revenue' && 'bg-white')}>
-                  <Text style={tw.style('text-base font-semibold', selectedTab === 'revenue' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('revenue.title')}</Text>
+              {/* Tab Selector - Même taille que Home */}
+              <View style={tw`flex-row bg-white/20 rounded-2xl p-1 mb-6 mx-12`}>
+                <TouchableOpacity onPress={() => setSelectedTab('revenue')} style={tw.style('flex-1 py-2 rounded-xl items-center', selectedTab === 'revenue' && 'bg-white')}>
+                  <Text style={tw.style('text-sm font-semibold', selectedTab === 'revenue' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('revenue.title')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setSelectedTab('budget')} style={tw.style('flex-1 py-3 rounded-xl items-center', selectedTab === 'budget' && 'bg-white')}>
-                  <Text style={tw.style('text-base font-semibold', selectedTab === 'budget' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('budget.title')}</Text>
+                <TouchableOpacity onPress={() => setSelectedTab('budget')} style={tw.style('flex-1 py-2 rounded-xl items-center', selectedTab === 'budget' && 'bg-white')}>
+                  <Text style={tw.style('text-sm font-semibold', selectedTab === 'budget' ? `text-[${colors.primary}]` : 'text-white/80')}>{t('budget.title')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -112,18 +124,42 @@ export const RevenueScreen = ({ navigation }: any) => {
                 </View>
               )}
 
-              {/* Budget Tab Content */}
+              {/* Budget Tab Content - Plus propre et pro */}
               {selectedTab === 'budget' && (
                 <View style={tw`items-center`}>
-                  <View style={tw`flex-row items-center mb-3`}>
-                    <Text style={tw`text-white/80 text-base mr-2`}>{t('budget.monthlyBudget')}</Text>
-                    <TouchableOpacity onPress={() => setShowInfoModal(true)}>
-                      <Info size={18} color="white" opacity={0.7} strokeWidth={2} />
-                    </TouchableOpacity>
-                  </View>
+                  {!isEditingBudget ? (
+                    <>
+                      {/* Budget Display */}
+                      <View style={tw`items-center mb-6`}>
+                        <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
+                        <Text style={tw`text-6xl font-bold text-white mb-3`}>{formatCurrency(budgetAmountValue)}</Text>
 
-                  {isEditingBudget ? (
+                        {/* Budget indicator - Plus compact */}
+                        {totalIncome > 0 && totalRecurring > 0 && (
+                          <View style={tw`flex-row items-center gap-2 mb-4`}>
+                            <View style={tw`flex-row items-center gap-1`}>
+                              <Text style={tw`text-white/60 text-sm`}>{formatCurrency(totalIncome)} revenue</Text>
+                              <Text style={tw`text-white/40 text-sm`}>-</Text>
+                              <Text style={tw`text-white/60 text-sm`}>{formatCurrency(totalRecurring)} recurring</Text>
+                            </View>
+                            {budgetAmountValue <= totalIncome - totalRecurring && (
+                              <View style={tw`bg-green-500/20 px-2 py-0.5 rounded-lg`}>
+                                <Text style={tw`text-green-400 text-xs font-semibold`}>✓</Text>
+                              </View>
+                            )}
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Action Button */}
+                      <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40`}>
+                        <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    /* Edit Mode - Inchangé */
                     <View style={tw`w-full items-center`}>
+                      <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
                       <View style={tw`w-full px-8`}>
                         <TextInput
                           value={budgetAmount}
@@ -145,28 +181,6 @@ export const RevenueScreen = ({ navigation }: any) => {
                           <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('expense.save')}</Text>
                         </TouchableOpacity>
                       </View>
-                    </View>
-                  ) : (
-                    <View style={tw`items-center`}>
-                      <Text style={tw`text-6xl font-bold text-white mb-2`}>{formatCurrency(budgetAmountValue)}</Text>
-
-                      {/* Budget vs Revenue indicator */}
-                      {totalIncome > 0 && (
-                        <View style={tw`flex-row items-center gap-2 mb-4`}>
-                          <Text style={tw`text-white/60 text-sm`}>
-                            {((budgetAmountValue / totalIncome) * 100).toFixed(0)}% {t('budgetProgress.ofRevenue')}
-                          </Text>
-                          {budgetAmountValue <= totalIncome && (
-                            <View style={tw`bg-green-500/20 px-2 py-1 rounded-lg`}>
-                              <Text style={tw`text-green-400 text-xs font-semibold`}>✓</Text>
-                            </View>
-                          )}
-                        </View>
-                      )}
-
-                      <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40`}>
-                        <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
-                      </TouchableOpacity>
                     </View>
                   )}
                 </View>

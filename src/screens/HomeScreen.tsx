@@ -182,11 +182,13 @@ export const HomeScreen = () => {
 
               {/* Animated Gauge Container */}
               <Animated.View style={{ opacity: fadeAnim }}>
-                {gaugeView === 'revenue' ? (
-                  <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={totalIncome} />
-                ) : (
-                  <BudgetProgressBar revenue={totalIncome} budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} />
-                )}
+                <BudgetGauge
+                  budget={budgetAmount}
+                  spent={totalSpent}
+                  recurring={totalRecurring}
+                  income={totalIncome}
+                  mode={gaugeView} // ← AJOUTE ÇA (gaugeView est déjà 'revenue' | 'budget')
+                />
               </Animated.View>
 
               {/* Stats Row */}
