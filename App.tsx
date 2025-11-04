@@ -12,11 +12,13 @@ import { AddIncomeScreen } from './src/screens/AddIncomeScreen';
 import { RecurringExpensesScreen } from './src/screens/RecurringExpensesScreen';
 import { AddRecurringScreen } from './src/screens/AddRecurringScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { BudgetScreen } from './src/screens/BudgetScreen';
+import { AddCategoryBudgetScreen } from './src/screens/AddCategoryBudgetScreen';
 import { initDatabase } from './src/database';
 import './src/i18n';
 import { useTranslation } from './src/hooks/useTranslation';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
-import { Home, Wallet, PlusCircle, Repeat, Settings } from 'lucide-react-native';
+import { Home, Wallet, PlusCircle, Repeat, Settings, DollarSign } from 'lucide-react-native';
 import { CategorySelectorScreen } from './src/screens/CategorySelectorScreen';
 
 const Tab = createBottomTabNavigator();
@@ -60,7 +62,6 @@ function TabNavigator() {
           headerShown: false,
         }}
       />
-
       <Tab.Screen
         name="AddExpense"
         component={AddExpenseScreen}
@@ -125,6 +126,14 @@ function AppNavigator() {
       <Stack.Screen
         name="CategorySelector"
         component={CategorySelectorScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="AddCategoryBudget"
+        component={AddCategoryBudgetScreen}
         options={{
           presentation: 'modal',
           headerShown: false,

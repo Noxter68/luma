@@ -233,7 +233,7 @@ export const HomeScreen = () => {
                 <View style={tw`mb-6`}>
                   <Card>
                     <View style={tw`flex-row justify-between items-center mb-3`}>
-                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>💰 {t('revenue.incomeMonth')}</Text>
+                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('revenue.incomeMonth')}</Text>
                       <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(totalIncome)}</Text>
                     </View>
                     <View style={tw`gap-2`}>

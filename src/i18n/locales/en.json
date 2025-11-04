@@ -45,6 +45,7 @@
     "save": "Save"
   },
   "addExpense": "Add",
+  "categoryBudgets": "Category Budgets",
   "categories": {
     "rent": "Rent",
     "food": "Food",

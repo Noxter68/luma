@@ -1,30 +1,26 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useBudgetStore } from '../store';
-import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { Info, DollarSign, Percent, Home, ShoppingCart, Popcorn, PiggyBank } from 'lucide-react-native';
+import { Info, Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BudgetMetricsCard } from '../components/BudgetMetricCard';
+import { CategoryBudgetCard } from '../components/CategoryBudgetCard';
+import { CategoryBudgetAlert } from '../components/CategoryBudgetAlert';
+import { getCategoriesNeedingAlert } from '../utils/budgetCalculations';
 
-const ALLOCATION_CATEGORIES = [
-  { id: 'essentials', key: 'essentials', percentage: 0.5, icon: Home },
-  { id: 'food', key: 'categories.food', percentage: 0.2, icon: ShoppingCart },
-  { id: 'entertainment', key: 'categories.entertainment', percentage: 0.15, icon: Popcorn },
-  { id: 'savings', key: 'savings', percentage: 0.15, icon: PiggyBank },
-];
-
-export const BudgetScreen = () => {
-  const { budget, refresh, setBudget } = useBudgetStore();
+export const BudgetScreen = ({ navigation }: any) => {
+  const { budget, refresh, setBudget, budgetMetrics, sortedCategoryBudgets, categoryBudgets } = useBudgetStore();
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [amount, setAmount] = useState('');
-  const [showPercentage, setShowPercentage] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [alertCategory, setAlertCategory] = useState<any>(null);
 
   useEffect(() => {
     refresh();
@@ -35,6 +31,18 @@ export const BudgetScreen = () => {
       setAmount(budget.amount.toString());
     }
   }, [budget, isEditing]);
+
+  // Vérifier si des catégories nécessitent une alerte
+  useEffect(() => {
+    const categoriesNeedingAlert = getCategoriesNeedingAlert(sortedCategoryBudgets);
+
+    // Afficher une alerte seulement si c'est la première fois qu'on dépasse 80%
+    // (pour éviter de spammer l'utilisateur à chaque navigation)
+    if (categoriesNeedingAlert.length > 0 && !alertCategory) {
+      // On prend la première catégorie qui nécessite une alerte
+      setAlertCategory(categoriesNeedingAlert[0]);
+    }
+  }, [sortedCategoryBudgets]);
 
   const handleSave = () => {
     const parsedAmount = parseFloat(amount);
@@ -59,6 +67,32 @@ export const BudgetScreen = () => {
 
   const budgetAmount = budget?.amount || 0;
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
+
+  // Grouper les catégories par groupe
+  const groupedCategories: Record<string, typeof sortedCategoryBudgets> = {};
+
+  sortedCategoryBudgets.forEach((catBudget) => {
+    const categoryData = require('../utils/categories').getCategoryById(catBudget.category);
+    const group = categoryData?.group || 'other';
+
+    if (!groupedCategories[group]) {
+      groupedCategories[group] = [];
+    }
+    groupedCategories[group].push(catBudget);
+  });
+
+  const handleEditCategory = (categoryBudget: any) => {
+    navigation.navigate('AddCategoryBudget', {
+      categoryBudget,
+      mode: 'edit',
+    });
+  };
+
+  const handleAddCategory = () => {
+    navigation.navigate('AddCategoryBudget', {
+      mode: 'add',
+    });
+  };
 
   return (
     <View style={tw`flex-1`}>
@@ -113,75 +147,64 @@ export const BudgetScreen = () => {
 
             {/* Content Section with Background Gradient */}
             <View style={tw`px-6`}>
-              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-4 pb-6`}>
-                {/* Suggested Allocation Header */}
+              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
+                {/* Budget Metrics Card */}
+                <BudgetMetricsCard metrics={budgetMetrics} />
+
+                {/* Section Header */}
                 <View style={tw`flex-row justify-between items-center mb-3`}>
                   <View>
-                    <Text style={tw.style('text-base font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('suggestedAllocation')}</Text>
-                    <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('allocationSubtitle')}</Text>
+                    <Text style={tw.style('text-lg font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('categoryBudgets')}</Text>
+                    <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                      {sortedCategoryBudgets.length} {sortedCategoryBudgets.length === 1 ? 'catégorie' : 'catégories'}
+                    </Text>
                   </View>
 
-                  {/* Simple Toggle Icon */}
-                  <TouchableOpacity onPress={() => setShowPercentage(!showPercentage)} style={tw.style('w-9 h-9 rounded-lg items-center justify-center', `bg-[${colors.primary}]/10`)}>
-                    {showPercentage ? <DollarSign size={16} color={colors.primary} strokeWidth={2.5} /> : <Percent size={16} color={colors.primary} strokeWidth={2.5} />}
+                  <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-4 py-2 rounded-xl flex-row items-center gap-2', `bg-[${colors.primary}]`)}>
+                    <Plus size={18} color="white" strokeWidth={2.5} />
+                    <Text style={tw`text-white text-sm font-semibold`}>{locale === 'fr' ? 'Ajouter' : 'Add'}</Text>
                   </TouchableOpacity>
                 </View>
 
-                {/* Allocation Grid - Optimized */}
-                <Card style={tw`p-0 overflow-hidden mb-4`}>
-                  {ALLOCATION_CATEGORIES.map((category, index) => {
-                    const allocatedAmount = budgetAmount * category.percentage;
-                    const IconComponent = category.icon;
-                    const isLast = index === ALLOCATION_CATEGORIES.length - 1;
+                {/* Category Budgets List */}
+                {sortedCategoryBudgets.length === 0 ? (
+                  <View style={tw.style('rounded-2xl p-8 items-center', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
+                    <Text style={tw.style('text-base text-center mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                      {locale === 'fr' ? 'Aucun budget catégoriel défini.\nCommence par ajouter une catégorie !' : 'No category budgets defined.\nStart by adding a category!'}
+                    </Text>
+                    <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-6 py-3 rounded-xl', `bg-[${colors.primary}]`)}>
+                      <Text style={tw`text-white text-base font-semibold`}>{locale === 'fr' ? 'Ajouter une catégorie' : 'Add a category'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View>
+                    {Object.keys(groupedCategories).map((groupKey) => {
+                      const categoriesInGroup = groupedCategories[groupKey];
+                      const CATEGORY_GROUPS = require('../utils/categories').CATEGORY_GROUPS;
 
-                    return (
-                      <View key={category.id}>
-                        <View style={tw`px-4 py-2.5`}>
-                          <View style={tw`flex-row items-center mb-2`}>
-                            {/* Icon with Gradient */}
-                            <View style={tw`w-8 h-8 rounded-lg mr-3 overflow-hidden`}>
-                              <LinearGradient
-                                colors={isDark ? [colors.primary, colors.primaryDark, colors.primary] : [colors.primaryLight, colors.primary, colors.primaryLight]}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={tw`w-full h-full items-center justify-center`}
-                              >
-                                <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
-                                  <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
-                                </View>
-                                <IconComponent size={16} color="white" strokeWidth={2.5} />
-                              </LinearGradient>
-                            </View>
+                      return (
+                        <View key={groupKey} style={tw`mb-4`}>
+                          {/* Group Header */}
+                          <Text style={tw.style('text-xs font-semibold uppercase tracking-wider mb-2 px-1', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                            {t(CATEGORY_GROUPS[groupKey])}
+                          </Text>
 
-                            {/* Label */}
-                            <Text style={tw.style('flex-1 text-sm font-medium', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t(category.key)}</Text>
-
-                            {/* Amount Display */}
-                            <Text style={tw.style('text-base font-bold', `text-[${colors.primary}]`)}>
-                              {showPercentage ? `${(category.percentage * 100).toFixed(0)}%` : formatCurrency(allocatedAmount)}
-                            </Text>
-                          </View>
-
-                          {/* Progress Bar */}
-                          <View style={tw`flex-row items-center ml-11`}>
-                            <View style={tw.style('flex-1 h-1.5 rounded-full overflow-hidden mr-2', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
-                              <View style={[tw.style('h-full rounded-full', `bg-[${colors.primary}]`), { width: `${category.percentage * 100}%` }]} />
-                            </View>
-                            {/* <Text style={tw.style('text-xs font-medium w-10 text-right', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                              {(category.percentage * 100).toFixed(0)}%
-                            </Text> */}
-                          </View>
+                          {/* Categories in this group */}
+                          {categoriesInGroup.map((catBudget) => (
+                            <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onEdit={() => handleEditCategory(catBudget)} />
+                          ))}
                         </View>
-
-                        {/* Divider */}
-                        {!isLast && <View style={tw.style('h-px mx-4', `bg-[${isDark ? colors.dark.border : colors.light.border}]`)} />}
-                      </View>
-                    );
-                  })}
-                </Card>
+                      );
+                    })}
+                  </View>
+                )}
 
                 {/* Tip */}
-                <Text style={tw.style('text-xs text-center italic px-2 mt-3 mb-4', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('tipText')}</Text>
+                {sortedCategoryBudgets.length > 0 && (
+                  <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                    {locale === 'fr' ? '💡 Les catégories proches de la limite apparaissent en premier' : '💡 Categories close to limit appear first'}
+                  </Text>
+                )}
               </LinearGradient>
             </View>
           </ScrollView>
@@ -202,6 +225,19 @@ export const BudgetScreen = () => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Category Alert Modal */}
+      {alertCategory && (
+        <CategoryBudgetAlert
+          category={alertCategory}
+          visible={!!alertCategory}
+          onClose={() => setAlertCategory(null)}
+          onViewDetails={() => {
+            setAlertCategory(null);
+            // Scroll to that category (optionnel)
+          }}
+        />
+      )}
     </View>
   );
 };

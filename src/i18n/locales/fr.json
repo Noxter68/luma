@@ -45,6 +45,7 @@
     "save": "Enregistrer"
   },
   "addExpense": "Ajouter",
+  "categoryBudgets": "Budgets par catégorie",
   "categories": {
     "rent": "Loyer",
     "food": "Alimentation",
@@ -165,7 +166,7 @@
     "onTrack": "Sur la bonne voie",
     "careful": "Attention",
     "nearLimit": "Proche de la limite",
-    "overBudget": "Budget dépassé",
+    "overBudget": "Dépassé",
     "overview": "Vue d'ensemble",
     "toSave": "à épargner"
   }

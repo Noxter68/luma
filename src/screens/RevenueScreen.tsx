@@ -1,31 +1,30 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated, Modal } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { DollarSign, Percent, Home, ShoppingCart, Popcorn, PiggyBank, Plus, Trash2 } from 'lucide-react-native';
+import { Plus, Trash2, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { INCOME_SOURCES } from '../utils/incomeSources';
-
-const ALLOCATION_CATEGORIES = [
-  { id: 'essentials', key: 'essentials', percentage: 0.5, icon: Home },
-  { id: 'food', key: 'categories.food', percentage: 0.2, icon: ShoppingCart },
-  { id: 'entertainment', key: 'categories.entertainment', percentage: 0.15, icon: Popcorn },
-  { id: 'savings', key: 'savings', percentage: 0.15, icon: PiggyBank },
-];
+import { BudgetMetricsCard } from '../components/BudgetMetricCard';
+import { CategoryBudgetCard } from '../components/CategoryBudgetCard';
+import { CategoryBudgetAlert } from '../components/CategoryBudgetAlert';
+import { getCategoriesNeedingAlert } from '../utils/budgetCalculations';
+import { getCategoryById, CATEGORY_GROUPS } from '../utils/categories';
 
 export const RevenueScreen = ({ navigation }: any) => {
-  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, totalRecurring } = useBudgetStore();
+  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, budgetMetrics, sortedCategoryBudgets } = useBudgetStore();
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [selectedTab, setSelectedTab] = useState<'revenue' | 'budget'>('revenue');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState('');
-  const [showPercentage, setShowPercentage] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [alertCategory, setAlertCategory] = useState<any>(null);
 
   // Animation pour le toggle
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -45,9 +44,20 @@ export const RevenueScreen = ({ navigation }: any) => {
       toValue: selectedTab === 'revenue' ? 0 : 1,
       useNativeDriver: true,
       friction: 8,
-      tension: 50,
+      tension: 100,
     }).start();
   }, [selectedTab]);
+
+  // Vérifier si des catégories nécessitent une alerte (seulement en mode Budget)
+  useEffect(() => {
+    if (selectedTab === 'budget') {
+      const categoriesNeedingAlert = getCategoriesNeedingAlert(sortedCategoryBudgets);
+
+      if (categoriesNeedingAlert.length > 0 && !alertCategory) {
+        setAlertCategory(categoriesNeedingAlert[0]);
+      }
+    }
+  }, [sortedCategoryBudgets, selectedTab]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -63,17 +73,6 @@ export const RevenueScreen = ({ navigation }: any) => {
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       Alert.alert(t('error'), t('invalidAmount'));
-      return;
-    }
-
-    const maxBudget = totalIncome - totalRecurring;
-
-    if (totalIncome > 0 && parsedAmount > maxBudget) {
-      Alert.alert(
-        t('error'),
-        `${t('budgetProgress.budgetTooHigh')}\n\n` + `Revenue: ${formatCurrency(totalIncome)}\n` + `Recurring: ${formatCurrency(totalRecurring)}\n` + `Max budget: ${formatCurrency(maxBudget)}`,
-        [{ text: 'OK' }]
-      );
       return;
     }
 
@@ -94,7 +93,7 @@ export const RevenueScreen = ({ navigation }: any) => {
 
   const getIncomeSourceIcon = (sourceId: string) => {
     const source = INCOME_SOURCES.find((s) => s.id === sourceId);
-    return source?.icon || DollarSign;
+    return source?.icon;
   };
 
   const getIncomeSourceLabel = (sourceId: string) => {
@@ -104,6 +103,32 @@ export const RevenueScreen = ({ navigation }: any) => {
 
   const budgetAmountValue = budget?.amount || 0;
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
+
+  // Grouper les catégories par groupe
+  const groupedCategories: Record<string, typeof sortedCategoryBudgets> = {};
+
+  sortedCategoryBudgets.forEach((catBudget) => {
+    const categoryData = getCategoryById(catBudget.category);
+    const group = categoryData?.group || 'other';
+
+    if (!groupedCategories[group]) {
+      groupedCategories[group] = [];
+    }
+    groupedCategories[group].push(catBudget);
+  });
+
+  const handleEditCategory = (categoryBudget: any) => {
+    navigation.navigate('AddCategoryBudget', {
+      categoryBudget,
+      mode: 'edit',
+    });
+  };
+
+  const handleAddCategory = () => {
+    navigation.navigate('AddCategoryBudget', {
+      mode: 'add',
+    });
+  };
 
   return (
     <View style={tw`flex-1`}>
@@ -124,7 +149,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                         {
                           translateX: slideAnim.interpolate({
                             inputRange: [0, 1],
-                            outputRange: [0, 125], // Distance ajustée pour rester dans le container
+                            outputRange: [0, 125],
                           }),
                         },
                       ],
@@ -157,26 +182,13 @@ export const RevenueScreen = ({ navigation }: any) => {
                 <View style={tw`items-center`}>
                   {!isEditingBudget ? (
                     <>
-                      <View style={tw`items-center mb-6`}>
-                        <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
-                        <Text style={tw`text-6xl font-bold text-white mb-3`}>{formatCurrency(budgetAmountValue)}</Text>
-
-                        {totalIncome > 0 && totalRecurring > 0 && (
-                          <View style={tw`flex-row items-center gap-2 mb-4`}>
-                            <View style={tw`flex-row items-center gap-1`}>
-                              <Text style={tw`text-white/60 text-sm`}>{formatCurrency(totalIncome)} revenue</Text>
-                              <Text style={tw`text-white/40 text-sm`}>-</Text>
-                              <Text style={tw`text-white/60 text-sm`}>{formatCurrency(totalRecurring)} recurring</Text>
-                            </View>
-                            {budgetAmountValue <= totalIncome - totalRecurring && (
-                              <View style={tw`bg-green-500/20 px-2 py-0.5 rounded-lg`}>
-                                <Text style={tw`text-green-400 text-xs font-semibold`}>✓</Text>
-                              </View>
-                            )}
-                          </View>
-                        )}
+                      <View style={tw`flex-row items-center mb-3`}>
+                        <Text style={tw`text-white/80 text-base mr-2`}>{t('budget.monthlyBudget')}</Text>
+                        <TouchableOpacity onPress={() => setShowInfoModal(true)}>
+                          <Info size={18} color="white" opacity={0.7} strokeWidth={2} />
+                        </TouchableOpacity>
                       </View>
-
+                      <Text style={tw`text-6xl font-bold text-white mb-5`}>{formatCurrency(budgetAmountValue)}</Text>
                       <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40`}>
                         <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
                       </TouchableOpacity>
@@ -211,7 +223,7 @@ export const RevenueScreen = ({ navigation }: any) => {
 
             {/* Content Section */}
             <View style={tw`px-6`}>
-              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-4 pb-6`}>
+              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
                 {/* Revenue List */}
                 {selectedTab === 'revenue' && (
                   <View>
@@ -238,7 +250,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                                   <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
                                     <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
                                   </View>
-                                  <IconComponent size={18} color="white" strokeWidth={2.5} />
+                                  {IconComponent && <IconComponent size={18} color="white" strokeWidth={2.5} />}
                                 </LinearGradient>
                               </View>
                               <View style={tw`flex-1`}>
@@ -268,97 +280,65 @@ export const RevenueScreen = ({ navigation }: any) => {
                   </View>
                 )}
 
-                {/* Budget Allocation */}
+                {/* Budget Content */}
                 {selectedTab === 'budget' && (
                   <View>
-                    {/* Overview Card - Minimalist */}
-                    {totalIncome > 0 && budgetAmountValue > 0 && (
-                      <Card style={tw`mb-4`}>
-                        <Text style={tw.style('text-sm font-medium mb-3', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetProgress.overview')}</Text>
+                    {/* Budget Metrics Card */}
+                    <BudgetMetricsCard metrics={budgetMetrics} />
 
-                        <View style={tw`gap-2 mb-3`}>
-                          <View style={tw`flex-row justify-between`}>
-                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('budgetProgress.totalRevenue')}</Text>
-                            <Text style={tw.style('text-sm font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(totalIncome)}</Text>
-                          </View>
-                          <View style={tw`flex-row justify-between`}>
-                            <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('budgetProgress.budgetLimit')}</Text>
-                            <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(budgetAmountValue)}</Text>
-                          </View>
-                        </View>
-
-                        {/* Simple Progress Bar */}
-                        <View style={tw.style('h-1.5 rounded-full overflow-hidden', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
-                          <View style={[tw.style('h-full', `bg-[${colors.primary}]`), { width: `${Math.min((budgetAmountValue / totalIncome) * 100, 100)}%` }]} />
-                        </View>
-
-                        <View style={tw`flex-row justify-between mt-2`}>
-                          <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                            {((budgetAmountValue / totalIncome) * 100).toFixed(0)}% {t('budgetProgress.ofRevenue')}
-                          </Text>
-                          <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>
-                            {formatCurrency(totalIncome - budgetAmountValue)} {t('budgetProgress.toSave')}
-                          </Text>
-                        </View>
-                      </Card>
-                    )}
-
+                    {/* Section Header */}
                     <View style={tw`flex-row justify-between items-center mb-3`}>
                       <View>
-                        <Text style={tw.style('text-base font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('suggestedAllocation')}</Text>
-                        <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('allocationSubtitle')}</Text>
+                        <Text style={tw.style('text-lg font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('categoryBudgets')}</Text>
+                        <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                          {sortedCategoryBudgets.length} {sortedCategoryBudgets.length === 1 ? 'catégorie' : 'catégories'}
+                        </Text>
                       </View>
 
-                      <TouchableOpacity onPress={() => setShowPercentage(!showPercentage)} style={tw.style('w-9 h-9 rounded-lg items-center justify-center', `bg-[${colors.primary}]/10`)}>
-                        {showPercentage ? <DollarSign size={16} color={colors.primary} strokeWidth={2.5} /> : <Percent size={16} color={colors.primary} strokeWidth={2.5} />}
+                      <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-4 py-2 rounded-xl flex-row items-center gap-2', `bg-[${colors.primary}]`)}>
+                        <Plus size={18} color="white" strokeWidth={2.5} />
+                        <Text style={tw`text-white text-sm font-semibold`}>{locale === 'fr' ? 'Ajouter' : 'Add'}</Text>
                       </TouchableOpacity>
                     </View>
 
-                    <Card style={tw`p-0 overflow-hidden mb-4`}>
-                      {ALLOCATION_CATEGORIES.map((category, index) => {
-                        const allocatedAmount = budgetAmountValue * category.percentage;
-                        const IconComponent = category.icon;
-                        const isLast = index === ALLOCATION_CATEGORIES.length - 1;
+                    {/* Category Budgets List */}
+                    {sortedCategoryBudgets.length === 0 ? (
+                      <View style={tw.style('rounded-2xl p-8 items-center', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
+                        <Text style={tw.style('text-base text-center mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                          {locale === 'fr' ? 'Aucun budget catégoriel défini.\nCommence par ajouter une catégorie !' : 'No category budgets defined.\nStart by adding a category!'}
+                        </Text>
+                        <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-6 py-3 rounded-xl', `bg-[${colors.primary}]`)}>
+                          <Text style={tw`text-white text-base font-semibold`}>{locale === 'fr' ? 'Ajouter une catégorie' : 'Add a category'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View>
+                        {Object.keys(groupedCategories).map((groupKey) => {
+                          const categoriesInGroup = groupedCategories[groupKey];
 
-                        return (
-                          <View key={category.id}>
-                            <View style={tw`px-4 py-2.5`}>
-                              <View style={tw`flex-row items-center mb-2`}>
-                                <View style={tw`w-8 h-8 rounded-lg mr-3 overflow-hidden`}>
-                                  <LinearGradient
-                                    colors={isDark ? [colors.primary, colors.primaryDark, colors.primary] : [colors.primaryLight, colors.primary, colors.primaryLight]}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={tw`w-full h-full items-center justify-center`}
-                                  >
-                                    <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
-                                      <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
-                                    </View>
-                                    <IconComponent size={16} color="white" strokeWidth={2.5} />
-                                  </LinearGradient>
-                                </View>
+                          return (
+                            <View key={groupKey} style={tw`mb-4`}>
+                              {/* Group Header */}
+                              <Text style={tw.style('text-xs font-semibold uppercase tracking-wider mb-2 px-1', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                                {t(CATEGORY_GROUPS[groupKey])}
+                              </Text>
 
-                                <Text style={tw.style('flex-1 text-sm font-medium', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t(category.key)}</Text>
-
-                                <Text style={tw.style('text-base font-bold', `text-[${colors.primary}]`)}>
-                                  {showPercentage ? `${(category.percentage * 100).toFixed(0)}%` : formatCurrency(allocatedAmount)}
-                                </Text>
-                              </View>
-
-                              <View style={tw`flex-row items-center ml-11`}>
-                                <View style={tw.style('flex-1 h-1.5 rounded-full overflow-hidden mr-2', `bg-[${isDark ? colors.dark.surface : colors.light.border}]`)}>
-                                  <View style={[tw.style('h-full rounded-full', `bg-[${colors.primary}]`), { width: `${category.percentage * 100}%` }]} />
-                                </View>
-                              </View>
+                              {/* Categories in this group */}
+                              {categoriesInGroup.map((catBudget) => (
+                                <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onEdit={() => handleEditCategory(catBudget)} />
+                              ))}
                             </View>
+                          );
+                        })}
+                      </View>
+                    )}
 
-                            {!isLast && <View style={tw.style('h-px mx-4', `bg-[${isDark ? colors.dark.border : colors.light.border}]`)} />}
-                          </View>
-                        );
-                      })}
-                    </Card>
-
-                    <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{t('tipText')}</Text>
+                    {/* Tip */}
+                    {sortedCategoryBudgets.length > 0 && (
+                      <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                        {locale === 'fr' ? '💡 Les catégories proches de la limite apparaissent en premier' : '💡 Categories close to limit appear first'}
+                      </Text>
+                    )}
                   </View>
                 )}
               </LinearGradient>
@@ -366,6 +346,33 @@ export const RevenueScreen = ({ navigation }: any) => {
           </ScrollView>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* Info Modal */}
+      <Modal visible={showInfoModal} transparent animationType="fade" onRequestClose={() => setShowInfoModal(false)}>
+        <TouchableOpacity activeOpacity={1} onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/60 justify-center items-center px-8`}>
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <View style={tw.style('rounded-3xl p-6 max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
+              <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>💰 {t('budget.monthlyBudget')}</Text>
+              <Text style={tw.style('text-base leading-6 mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetInfo')}</Text>
+              <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
+                <Text style={tw`text-white text-base font-semibold`}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Category Alert Modal */}
+      {alertCategory && (
+        <CategoryBudgetAlert
+          category={alertCategory}
+          visible={!!alertCategory}
+          onClose={() => setAlertCategory(null)}
+          onViewDetails={() => {
+            setAlertCategory(null);
+          }}
+        />
+      )}
     </View>
   );
 };
