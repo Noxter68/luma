@@ -30,6 +30,15 @@ export interface RecurringExpense {
   createdAt: string;
 }
 
+export interface RecurringIncome {
+  id: string;
+  amount: number;
+  source: 'salary' | 'bonus' | 'freelance' | 'gift' | 'other';
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface Income {
   id: string;
   month: string; // Format: "YYYY-MM"

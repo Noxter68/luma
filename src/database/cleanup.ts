@@ -66,6 +66,30 @@ export const cleanupDuplicateIncomes = (): number => {
 };
 
 /**
+ * Nettoie les revenus récurrents en doublon
+ * Garde seulement le plus ancien pour chaque combinaison (source, amount)
+ */
+export const cleanupDuplicateRecurringIncomes = (): number => {
+  try {
+    // Supprimer tous les revenus récurrents SAUF le plus ancien pour chaque (source, amount)
+    const result = db.runSync(`
+      DELETE FROM incomes 
+      WHERE is_recurring = 1 
+      AND id NOT IN (
+        SELECT MIN(id) 
+        FROM incomes 
+        WHERE is_recurring = 1
+        GROUP BY source, amount
+      )
+    `);
+    return result.changes;
+  } catch (error) {
+    console.error('Cleanup recurring incomes error:', error);
+    return 0;
+  }
+};
+
+/**
  * Statistiques détaillées de la base
  */
 export const getDatabaseStats = (): {

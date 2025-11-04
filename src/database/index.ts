@@ -37,6 +37,17 @@ export const initDatabase = () => {
   `);
 
   db.execSync(`
+    CREATE TABLE IF NOT EXISTS recurring_incomes (
+      id TEXT PRIMARY KEY,
+      amount REAL NOT NULL,
+      source TEXT NOT NULL,
+      description TEXT,
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+  `);
+
+  db.execSync(`
     CREATE TABLE IF NOT EXISTS incomes (
       id TEXT PRIMARY KEY,
       month TEXT NOT NULL,

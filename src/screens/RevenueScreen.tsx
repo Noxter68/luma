@@ -45,7 +45,7 @@ export const RevenueScreen = ({ navigation }: any) => {
       toValue: selectedTab === 'revenue' ? 0 : 1,
       useNativeDriver: true,
       friction: 8,
-      tension: 100,
+      tension: 50,
     }).start();
   }, [selectedTab]);
 

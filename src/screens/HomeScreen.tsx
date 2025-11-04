@@ -26,10 +26,6 @@ export const HomeScreen = () => {
   const slideAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
-    refresh();
-  }, []);
-
-  useEffect(() => {
     const monthStr = format(selectedDate, 'yyyy-MM');
     setCurrentMonth(monthStr);
   }, [selectedDate]);
@@ -128,7 +124,7 @@ export const HomeScreen = () => {
       toValue: view === 'revenue' ? 0 : 1,
       useNativeDriver: true,
       friction: 8,
-      tension: 100,
+      tension: 50,
     }).start();
 
     // Fade animation

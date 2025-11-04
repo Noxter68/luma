@@ -1,5 +1,5 @@
 import { db } from './index';
-import { Budget, Expense, RecurringExpense, Income } from '../types';
+import { Budget, Expense, RecurringExpense, Income, RecurringIncome } from '../types';
 
 // Budgets
 export const getBudgetByMonth = (month: string): Budget | null => {
@@ -163,31 +163,52 @@ export const updateIncome = (income: Income): void => {
   ]);
 };
 
-export const deleteIncome = (id: string): void => {
-  db.runSync('DELETE FROM incomes WHERE id = ?', [id]);
-};
-
-// Get all recurring incomes (pour l'auto-création)
-export const getAllRecurringIncomes = (): Income[] => {
+// Recurring Incomes (TEMPLATES)
+export const getAllRecurringIncomes = (): RecurringIncome[] => {
   const results = db.getAllSync<{
     id: string;
-    month: string;
     amount: number;
     source: string;
     description: string | null;
-    is_recurring: number;
-    date: string;
+    is_active: number;
     created_at: string;
-  }>('SELECT * FROM incomes WHERE is_recurring = 1 ORDER BY created_at DESC');
+  }>('SELECT * FROM recurring_incomes WHERE is_active = 1 ORDER BY created_at DESC');
 
   return results.map((row) => ({
     id: row.id,
-    month: row.month,
     amount: row.amount,
-    source: row.source as Income['source'],
+    source: row.source as RecurringIncome['source'],
     description: row.description || undefined,
-    isRecurring: row.is_recurring === 1,
-    date: row.date,
+    isActive: row.is_active === 1,
     createdAt: row.created_at,
   }));
+};
+
+export const createRecurringIncome = (recurring: RecurringIncome): void => {
+  db.runSync('INSERT INTO recurring_incomes (id, amount, source, description, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
+    recurring.id,
+    recurring.amount,
+    recurring.source,
+    recurring.description || null,
+    recurring.isActive ? 1 : 0,
+    recurring.createdAt,
+  ]);
+};
+
+export const updateRecurringIncome = (recurring: RecurringIncome): void => {
+  db.runSync('UPDATE recurring_incomes SET amount = ?, source = ?, description = ?, is_active = ? WHERE id = ?', [
+    recurring.amount,
+    recurring.source,
+    recurring.description || null,
+    recurring.isActive ? 1 : 0,
+    recurring.id,
+  ]);
+};
+
+export const deleteRecurringIncome = (id: string): void => {
+  db.runSync('DELETE FROM recurring_incomes WHERE id = ?', [id]);
+};
+
+export const deleteIncome = (id: string): void => {
+  db.runSync('DELETE FROM incomes WHERE id = ?', [id]);
 };

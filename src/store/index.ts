@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { format } from 'date-fns';
-import { Budget, Expense, RecurringExpense, Income } from '../types';
+import { Budget, Expense, RecurringExpense, Income, RecurringIncome } from '../types';
 import {
   getBudgetByMonth,
   createBudget as dbCreateBudget,
@@ -15,6 +15,10 @@ import {
   createIncome as dbCreateIncome,
   updateIncome as dbUpdateIncome,
   deleteIncome as dbDeleteIncome,
+  getAllRecurringIncomes,
+  createRecurringIncome as dbCreateRecurringIncome,
+  updateRecurringIncome as dbUpdateRecurringIncome,
+  deleteRecurringIncome as dbDeleteRecurringIncome,
 } from '../database/queries';
 
 interface BudgetStore {
@@ -23,6 +27,7 @@ interface BudgetStore {
   expenses: Expense[];
   recurringExpenses: RecurringExpense[];
   incomes: Income[];
+  recurringIncomes: RecurringIncome[];
 
   // Computed values
   totalSpent: number;
@@ -48,7 +53,14 @@ interface BudgetStore {
   deleteIncome: (id: string) => void;
   refresh: () => void;
   computeTotals: () => void;
+  loadRecurringIncomes: () => void;
+  addRecurringIncome: (income: Omit<RecurringIncome, 'id' | 'createdAt'>) => void;
+  updateRecurringIncome: (income: RecurringIncome) => void;
+  deleteRecurringIncome: (id: string) => void;
 }
+
+// ⭐ Guard flag en dehors du store
+let isRefreshing = false;
 
 export const useBudgetStore = create<BudgetStore>((set, get) => ({
   currentMonth: format(new Date(), 'yyyy-MM'),
@@ -56,15 +68,14 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
   expenses: [],
   recurringExpenses: [],
   incomes: [],
+  recurringIncomes: [],
 
-  // Computed - valeurs par défaut
   totalSpent: 0,
   totalRecurring: 0,
   totalWithRecurring: 0,
   totalIncome: 0,
   remaining: 0,
 
-  // Fonction pour recalculer les totaux
   computeTotals: () => {
     const state = get();
     const totalSpent = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -72,7 +83,6 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const totalIncome = state.incomes.reduce((sum, inc) => sum + inc.amount, 0);
     const totalWithRecurring = totalSpent + totalRecurring;
 
-    // Calcul basé sur les incomes si disponibles, sinon sur le budget
     const availableAmount = totalIncome > 0 ? totalIncome - totalRecurring : state.budget?.amount || 0;
     const remaining = availableAmount - totalSpent;
 
@@ -198,12 +208,85 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     get().loadIncomes();
   },
 
+  loadRecurringIncomes: () => {
+    const recurring = getAllRecurringIncomes();
+    set({ recurringIncomes: recurring });
+  },
+
+  addRecurringIncome: (incomeData) => {
+    const income: RecurringIncome = {
+      ...incomeData,
+      id: `recurring-income-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    dbCreateRecurringIncome(income);
+    get().loadRecurringIncomes();
+  },
+
+  updateRecurringIncome: (income: RecurringIncome) => {
+    dbUpdateRecurringIncome(income);
+    get().loadRecurringIncomes();
+  },
+
+  deleteRecurringIncome: (id: string) => {
+    dbDeleteRecurringIncome(id);
+    get().loadRecurringIncomes();
+  },
+
   refresh: () => {
-    get().loadBudget();
-    get().loadExpenses();
-    get().loadRecurringExpenses();
-    get().loadIncomes();
-    // ⚠️ SUPPRIMÉ: processRecurringIncomes()
-    // Les incomes récurrents ne sont PLUS auto-créés !
+    if (isRefreshing) {
+      console.log('⚠️ Refresh déjà en cours, ignoré');
+      return;
+    }
+
+    isRefreshing = true;
+    const { currentMonth } = get();
+
+    try {
+      get().loadBudget();
+      get().loadExpenses();
+      get().loadRecurringExpenses();
+      get().loadRecurringIncomes(); // ⭐ Charger les templates
+
+      // Charger les incomes INSTANCES du mois
+      const existingIncomes = getIncomesByMonth(currentMonth);
+      const recurringIncomeTemplates = getAllRecurringIncomes(); // ⭐ Templates seulement
+
+      console.log(`📅 Refresh pour ${currentMonth}`);
+      console.log(`💰 ${existingIncomes.length} revenus existants`);
+      console.log(`🔄 ${recurringIncomeTemplates.length} templates récurrents`);
+
+      let created = 0;
+      recurringIncomeTemplates.forEach((template) => {
+        const alreadyExists = existingIncomes.some((inc) => inc.month === currentMonth && inc.source === template.source && inc.amount === template.amount && inc.isRecurring === true);
+
+        if (!alreadyExists) {
+          console.log(`✨ Création instance : ${template.source} - ${template.amount}€`);
+
+          const newIncome: Income = {
+            id: `income-${currentMonth}-${template.source}-${Date.now()}`,
+            month: currentMonth,
+            amount: template.amount,
+            source: template.source,
+            description: template.description,
+            isRecurring: true, // ⭐ Instance créée depuis un template
+            date: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+          };
+
+          dbCreateIncome(newIncome);
+          created++;
+        }
+      });
+
+      if (created > 0) {
+        console.log(`✅ ${created} instances créées`);
+      }
+
+      get().loadIncomes();
+    } finally {
+      isRefreshing = false;
+    }
   },
 }));

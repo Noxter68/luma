@@ -16,7 +16,7 @@ interface AddIncomeScreenProps {
 }
 
 export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
-  const { addIncome, currentMonth } = useBudgetStore();
+  const { addIncome, addRecurringIncome, currentMonth } = useBudgetStore(); // ⭐ Ajouter addRecurringIncome
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [amount, setAmount] = useState('');
@@ -41,14 +41,25 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
     setLoading(true);
 
     try {
-      addIncome({
-        month: currentMonth,
-        amount: parsedAmount,
-        source: source as 'salary' | 'bonus' | 'freelance' | 'gift' | 'other',
-        description: description || undefined,
-        isRecurring,
-        date: new Date().toISOString(),
-      });
+      if (isRecurring) {
+        // ⭐ Créer un TEMPLATE récurrent
+        addRecurringIncome({
+          amount: parsedAmount,
+          source: source as 'salary' | 'bonus' | 'freelance' | 'gift' | 'other',
+          description: description || undefined,
+          isActive: true,
+        });
+      } else {
+        // Créer une instance unique
+        addIncome({
+          month: currentMonth,
+          amount: parsedAmount,
+          source: source as 'salary' | 'bonus' | 'freelance' | 'gift' | 'other',
+          description: description || undefined,
+          isRecurring: false,
+          date: new Date().toISOString(),
+        });
+      }
 
       Alert.alert(t('success'), t('revenue.incomeAdded'), [{ text: 'OK', onPress: () => navigation.goBack() }]);
 
