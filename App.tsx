@@ -55,6 +55,7 @@ function TabNavigator() {
         options={{
           title: t('budget.title'),
           tabBarIcon: ({ color, size }) => <Wallet size={size} color={color} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen

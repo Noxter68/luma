@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BudgetGauge } from '../components/BudgetGauge';
 
 export const HomeScreen = () => {
   const { budget, expenses, recurringExpenses, totalSpent, totalRecurring, totalWithRecurring, remaining, refresh, deleteExpense, setCurrentMonth, currentMonth } = useBudgetStore();
@@ -127,15 +128,7 @@ export const HomeScreen = () => {
               </View>
 
               {/* Budget Circle */}
-              <View style={tw`items-center mb-6`}>
-                <View style={tw`w-48 h-48 rounded-full bg-white/10 items-center justify-center border-8 border-white/30`}>
-                  <View style={tw`items-center`}>
-                    <Home size={48} color="white" strokeWidth={2} />
-                    <Text style={tw`text-white text-3xl font-bold mt-3`}>{formatCurrency(remaining)}</Text>
-                    <Text style={tw`text-white/80 text-sm mt-1`}>LEFT TO SPEND</Text>
-                  </View>
-                </View>
-              </View>
+              <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} />
 
               {/* Stats Row */}
               <View style={tw`flex-row justify-between px-4`}>

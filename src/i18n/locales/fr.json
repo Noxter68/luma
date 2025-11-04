@@ -44,9 +44,6 @@
   "expenseAdded": "Dépense ajoutée",
   "cannotAddExpense": "Impossible d'ajouter la dépense",
   "descriptionPlaceholder": "Ex: Course du samedi",
-  "suggestedAllocation": "Suggestions de répartition",
-  "essentials": "Essentiels",
-  "tipText": "💡 Ces suggestions sont indicatives. Adaptez-les selon vos besoins.",
   "languageChanged": "Langue changée avec succès",
   "cannotChangeLanguage": "Impossible de changer la langue",
   "exportComingSoon": "L'export des données sera bientôt disponible",
@@ -62,5 +59,11 @@
   "delete": "Supprimer",
   "addRecurringExpense": "Ajouter dépense récurrente",
   "recurringAdded": "Dépense récurrente ajoutée",
-  "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente"
+  "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente",
+  "suggestedAllocation": "Suggestions de répartition",
+  "allocationSubtitle": "Distribution intelligente pour des finances équilibrées",
+  "essentials": "Essentiels",
+  "savings": "Épargne",
+  "tipText": "Ces suggestions sont indicatives. Adaptez-les selon vos besoins.",
+  "budgetInfo": "Votre budget mensuel inclut tous vos revenus : salaire, cadeaux d'anniversaire ou de Noël, primes, prestations externes ou tout autre argent reçu dans le mois. C'est le montant total que vous pouvez répartir pour vos dépenses."
 }

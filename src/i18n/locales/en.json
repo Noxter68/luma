@@ -44,9 +44,6 @@
   "expenseAdded": "Expense added",
   "cannotAddExpense": "Cannot add expense",
   "descriptionPlaceholder": "e.g., Saturday groceries",
-  "suggestedAllocation": "Suggested Allocation",
-  "essentials": "Essentials",
-  "tipText": "💡 These suggestions are indicative. Adapt them to your needs.",
   "languageChanged": "Language changed successfully",
   "cannotChangeLanguage": "Cannot change language",
   "exportComingSoon": "Data export coming soon",
@@ -62,5 +59,11 @@
   "delete": "Delete",
   "addRecurringExpense": "Add Recurring Expense",
   "recurringAdded": "Recurring expense added",
-  "cannotAddRecurring": "Cannot add recurring expense"
+  "cannotAddRecurring": "Cannot add recurring expense",
+  "suggestedAllocation": "Suggested Allocation",
+  "allocationSubtitle": "Smart distribution for balanced finances",
+  "essentials": "Essentials",
+  "savings": "Savings",
+  "tipText": "These suggestions are indicative. Adapt them to your needs.",
+  "budgetInfo": "Your monthly budget includes all income: salary, gifts, bonuses, freelance work, or any other money received during the month. This is the total amount you can allocate to your expenses."
 }
