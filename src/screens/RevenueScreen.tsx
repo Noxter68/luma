@@ -10,21 +10,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { INCOME_SOURCES } from '../utils/incomeSources';
-import { BudgetMetricsCard } from '../components/BudgetMetricCard';
 import { CategoryBudgetCard } from '../components/CategoryBudgetCard';
-import { CategoryBudgetAlert } from '../components/CategoryBudgetAlert';
-import { getCategoriesNeedingAlert } from '../utils/budgetCalculations';
 import { getCategoryById, CATEGORY_GROUPS } from '../utils/categories';
 
 export const RevenueScreen = ({ navigation }: any) => {
-  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, budgetMetrics, sortedCategoryBudgets } = useBudgetStore();
+  const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, sortedCategoryBudgets } = useBudgetStore();
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [selectedTab, setSelectedTab] = useState<'revenue' | 'budget'>('revenue');
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [alertCategory, setAlertCategory] = useState<any>(null);
 
   // Animation pour le toggle
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -47,17 +43,6 @@ export const RevenueScreen = ({ navigation }: any) => {
       tension: 100,
     }).start();
   }, [selectedTab]);
-
-  // Vérifier si des catégories nécessitent une alerte (seulement en mode Budget)
-  useEffect(() => {
-    if (selectedTab === 'budget') {
-      const categoriesNeedingAlert = getCategoriesNeedingAlert(sortedCategoryBudgets);
-
-      if (categoriesNeedingAlert.length > 0 && !alertCategory) {
-        setAlertCategory(categoriesNeedingAlert[0]);
-      }
-    }
-  }, [sortedCategoryBudgets, selectedTab]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -283,33 +268,24 @@ export const RevenueScreen = ({ navigation }: any) => {
                 {/* Budget Content */}
                 {selectedTab === 'budget' && (
                   <View>
-                    {/* Budget Metrics Card */}
-                    <BudgetMetricsCard metrics={budgetMetrics} />
-
-                    {/* Section Header */}
-                    <View style={tw`flex-row justify-between items-center mb-3`}>
-                      <View>
-                        <Text style={tw.style('text-lg font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('categoryBudgets')}</Text>
-                        <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                          {sortedCategoryBudgets.length} {sortedCategoryBudgets.length === 1 ? 'catégorie' : 'catégories'}
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-4 py-2 rounded-xl flex-row items-center gap-2', `bg-[${colors.primary}]`)}>
-                        <Plus size={18} color="white" strokeWidth={2.5} />
-                        <Text style={tw`text-white text-sm font-semibold`}>{locale === 'fr' ? 'Ajouter' : 'Add'}</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {/* Add Category Button at the top */}
+                    <TouchableOpacity
+                      onPress={handleAddCategory}
+                      style={tw.style(
+                        'rounded-2xl p-4 mb-4 flex-row items-center justify-center gap-2 border-2 border-dashed',
+                        isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`
+                      )}
+                    >
+                      <Plus size={20} color={colors.primary} strokeWidth={2.5} />
+                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{locale === 'fr' ? 'Ajouter une catégorie de budget' : 'Add budget category'}</Text>
+                    </TouchableOpacity>
 
                     {/* Category Budgets List */}
                     {sortedCategoryBudgets.length === 0 ? (
                       <View style={tw.style('rounded-2xl p-8 items-center', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
-                        <Text style={tw.style('text-base text-center mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
-                          {locale === 'fr' ? 'Aucun budget catégoriel défini.\nCommence par ajouter une catégorie !' : 'No category budgets defined.\nStart by adding a category!'}
+                        <Text style={tw.style('text-base text-center', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                          {locale === 'fr' ? 'Aucune catégorie de budget.\nCommence par en ajouter une !' : 'No budget categories.\nStart by adding one!'}
                         </Text>
-                        <TouchableOpacity onPress={handleAddCategory} style={tw.style('px-6 py-3 rounded-xl', `bg-[${colors.primary}]`)}>
-                          <Text style={tw`text-white text-base font-semibold`}>{locale === 'fr' ? 'Ajouter une catégorie' : 'Add a category'}</Text>
-                        </TouchableOpacity>
                       </View>
                     ) : (
                       <View>
@@ -336,7 +312,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                     {/* Tip */}
                     {sortedCategoryBudgets.length > 0 && (
                       <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                        {locale === 'fr' ? '💡 Les catégories proches de la limite apparaissent en premier' : '💡 Categories close to limit appear first'}
+                        {locale === 'fr' ? 'Les catégories proches de la limite apparaissent en premier' : 'Categories close to limit appear first'}
                       </Text>
                     )}
                   </View>
@@ -352,7 +328,7 @@ export const RevenueScreen = ({ navigation }: any) => {
         <TouchableOpacity activeOpacity={1} onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/60 justify-center items-center px-8`}>
           <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
             <View style={tw.style('rounded-3xl p-6 max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
-              <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>💰 {t('budget.monthlyBudget')}</Text>
+              <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budget.monthlyBudget')}</Text>
               <Text style={tw.style('text-base leading-6 mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetInfo')}</Text>
               <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
                 <Text style={tw`text-white text-base font-semibold`}>OK</Text>
@@ -361,18 +337,6 @@ export const RevenueScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-
-      {/* Category Alert Modal */}
-      {alertCategory && (
-        <CategoryBudgetAlert
-          category={alertCategory}
-          visible={!!alertCategory}
-          onClose={() => setAlertCategory(null)}
-          onViewDetails={() => {
-            setAlertCategory(null);
-          }}
-        />
-      )}
     </View>
   );
 };

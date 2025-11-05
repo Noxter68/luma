@@ -181,7 +181,7 @@ export const AddCategoryBudgetScreen = ({ navigation, route }: AddCategoryBudget
                   <View style={tw`flex-row items-center justify-between`}>
                     <View style={tw`flex-1 mr-4`}>
                       <Text style={tw.style('text-base font-semibold mb-1', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
-                        🔄 {locale === 'fr' ? 'Récurrent chaque mois' : 'Recurring every month'}
+                        {locale === 'fr' ? 'Récurrent chaque mois' : 'Recurring every month'}
                       </Text>
                       <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
                         {locale === 'fr' ? 'Sera automatiquement recréé le mois suivant' : 'Will be automatically recreated next month'}

@@ -32,89 +32,82 @@ export const CategoryBudgetAlert = ({ category, visible, onClose, onViewDetails 
     const categoryName = categoryData ? t(categoryData.translationKey) : category.category;
 
     if (category.isOverBudget) {
-      return locale === 'fr' ? `Tu as dépassé ton budget ${categoryName} ! 🚨` : `You've exceeded your ${categoryName} budget! 🚨`;
+      return locale === 'fr' ? `Budget ${categoryName} dépassé` : `${categoryName} budget exceeded`;
     }
 
     if (category.isNearLimit) {
-      return locale === 'fr'
-        ? `Hey, tu as atteint ${Math.round(category.percentage)}% de ton budget ${categoryName} ⚠️`
-        : `Hey, you've reached ${Math.round(category.percentage)}% of your ${categoryName} budget ⚠️`;
+      return locale === 'fr' ? `${Math.round(category.percentage)}% du budget ${categoryName} atteint` : `${Math.round(category.percentage)}% of ${categoryName} budget reached`;
     }
 
     return '';
   };
 
-  const getMotivationalMessage = () => {
-    if (locale === 'fr') {
-      return 'Continue comme ça pour atteindre tes objectifs ! 💪';
+  const getDescription = () => {
+    if (category.isOverBudget) {
+      return locale === 'fr' ? 'Vous avez dépassé la limite fixée pour cette catégorie.' : 'You have exceeded the set limit for this category.';
     }
-    return 'Keep it up to reach your goals! 💪';
+
+    return locale === 'fr' ? 'Vous approchez de la limite de cette catégorie.' : 'You are approaching the limit for this category.';
   };
+
+  // Couleur basée sur la palette
+  const alertColor = category.isOverBudget ? colors.primary : colors.primaryLight;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity activeOpacity={1} onPress={onClose} style={tw`flex-1 bg-black/60 justify-center items-center px-6`}>
         <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-          <View style={tw.style('rounded-3xl p-6 max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
+          <View style={tw.style('rounded-3xl p-6 w-full max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
             {/* Header */}
             <View style={tw`flex-row items-start justify-between mb-4`}>
               <View style={tw`flex-1 mr-3`}>
                 <View style={tw`flex-row items-center gap-2 mb-2`}>
-                  <AlertTriangle size={24} color={category.isOverBudget ? '#EF4444' : '#F97316'} strokeWidth={2.5} />
-                  <Text style={tw.style('text-xl font-bold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{getMessage()}</Text>
+                  <AlertTriangle size={24} color={alertColor} strokeWidth={2} />
+                  <Text style={tw.style('text-lg font-bold flex-1', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{getMessage()}</Text>
                 </View>
+                <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{getDescription()}</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={tw`p-1`}>
-                <X size={24} color={isDark ? colors.dark.textSecondary : colors.light.textSecondary} strokeWidth={2} />
+                <X size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
               </TouchableOpacity>
             </View>
 
             {/* Stats */}
             <View style={tw.style('rounded-2xl p-4 mb-4', isDark ? `bg-[${colors.dark.surface}]` : `bg-[${colors.light.bg}]`)}>
-              <View style={tw`flex-row justify-between items-center mb-2`}>
+              <View style={tw`flex-row justify-between items-center mb-3`}>
                 <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetProgress.consumed')}</Text>
-                <Text style={tw.style('text-base font-bold', { color: category.isOverBudget ? '#EF4444' : '#F97316' })}>
+                <Text style={tw.style('text-base font-bold', `text-[${alertColor}]`)}>
                   {formatCurrency(category.spent)} / {formatCurrency(category.amount)}
                 </Text>
               </View>
 
+              {/* Progress bar avec couleurs palette */}
               <View style={tw.style('h-2 rounded-full overflow-hidden', `bg-[${isDark ? colors.dark.border : colors.light.border}]`)}>
                 <View
                   style={[
                     tw`h-full rounded-full`,
                     {
                       width: `${Math.min(category.percentage, 100)}%`,
-                      backgroundColor: category.isOverBudget ? '#EF4444' : '#F97316',
+                      backgroundColor: alertColor,
                     },
                   ]}
                 />
               </View>
 
-              <View style={tw`flex-row justify-between items-center mt-2`}>
+              <View style={tw`flex-row justify-between items-center mt-3`}>
                 <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
                   {category.remaining > 0 ? t('budgetProgress.remaining') : t('budgetProgress.overBudget')}
                 </Text>
-                <Text style={tw.style('text-base font-bold', { color: category.isOverBudget ? '#EF4444' : '#F97316' })}>
-                  {category.remaining > 0 ? formatCurrency(category.remaining) : `+${formatCurrency(Math.abs(category.remaining))}`}
+                <Text style={tw.style('text-base font-bold', `text-[${alertColor}]`)}>
+                  {category.remaining > 0 ? formatCurrency(category.remaining) : formatCurrency(Math.abs(category.remaining))}
                 </Text>
               </View>
             </View>
 
-            {/* Motivational message */}
-            <Text style={tw.style('text-sm text-center mb-4 italic', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{getMotivationalMessage()}</Text>
-
-            {/* Actions */}
-            <View style={tw`flex-row gap-3`}>
-              <TouchableOpacity onPress={onClose} style={tw.style('flex-1 py-3 rounded-xl items-center', isDark ? `bg-[${colors.dark.surface}]` : `bg-[${colors.light.border}]`)}>
-                <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{locale === 'fr' ? 'OK, merci' : 'OK, thanks'}</Text>
-              </TouchableOpacity>
-
-              {onViewDetails && (
-                <TouchableOpacity onPress={onViewDetails} style={tw.style('flex-1 py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
-                  <Text style={tw`text-white text-base font-semibold`}>{locale === 'fr' ? 'Voir détails' : 'View details'}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            {/* Action button */}
+            <TouchableOpacity onPress={onClose} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
+              <Text style={tw`text-white text-base font-semibold`}>{locale === 'fr' ? 'Compris' : 'Got it'}</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
