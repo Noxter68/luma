@@ -1,15 +1,36 @@
+import React, { ReactNode } from 'react';
 import { View, ViewStyle } from 'react-native';
-import { ReactNode } from 'react';
 import tw from '../lib/tailwind';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface CardProps {
   children: ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
 }
 
 export const Card = ({ children, style }: CardProps) => {
   const { isDark, colors } = useTheme();
 
-  return <View style={tw.style('rounded-2xl p-6', isDark ? `bg-[${colors.dark.card}] border border-[${colors.dark.border}]` : 'bg-white shadow-sm', style)}>{children}</View>;
+  // Padding par défaut : p-4 (16px)
+  const baseStyles = tw`rounded-2xl p-4`;
+
+  const themedStyles: ViewStyle = isDark
+    ? {
+        backgroundColor: colors.dark?.card ?? '#1C242C',
+        borderColor: colors.dark?.border ?? '#2B3A42',
+        borderWidth: 1,
+      }
+    : {
+        backgroundColor: 'white',
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 1,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+      };
+
+  return <View style={[baseStyles, themedStyles, style]}>{children}</View>;
 };

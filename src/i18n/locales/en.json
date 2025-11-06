@@ -36,13 +36,14 @@
     "gift": "Gift",
     "other": "Other"
   },
+
   "expense": {
-    "add": "Recent Expenses",
     "amount": "Amount",
     "category": "Category",
-    "description": "Description (optional)",
-    "date": "Date",
-    "save": "Save"
+    "description": "Description",
+    "save": "Save",
+    "recurring": "Recurring expense",
+    "recurringHint": "This expense will be automatically added every month"
   },
   "addExpense": "Add",
   "categoryBudgets": "Category Budgets",
@@ -171,5 +172,36 @@
     "overBudget": "Over budget",
     "overview": "Overview",
     "toSave": "to save"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Track your financial performance",
+    "months": "months",
+    "currentMonth": "Current month",
+    "expenses": "Expenses",
+    "savings": "Savings",
+    "totalSpent": "Total spent",
+    "totalSaved": "Total saved",
+    "keyMetrics": "Key metrics",
+    "avgExpense": "Avg. Expenses / month",
+    "avgIncome": "Avg. Income / month",
+    "recurring": "Monthly recurring",
+    "savingsRate": "Savings rate",
+    "financialScore": "Financial Score",
+    "scoreExcellent": "Excellent! Keep it up 🎉",
+    "scoreGood": "Good job! You're on track 👍",
+    "scoreFair": "Fair, but can improve 💪",
+    "scoreNeedsWork": "Needs improvement 📈",
+    "prediction": "End of year prediction",
+    "predictionDesc": "At this pace, you'll have saved {{amount}} by year end ({{months}} months left)",
+    "projected": "projected",
+    "pattern": "Spending pattern analysis",
+    "patternDesc": "You spend an average of {{amount}} on {{day}}",
+    "topCategories": "Top categories",
+    "transactions": "transactions",
+    "noData": "No data available",
+    "yearProjection": "Year Projection",
+
+    "projectionDesc": "Based on current trends, you could save {amount} by year end ({months} months left)"
   }
 }

@@ -149,7 +149,7 @@ export const BudgetScreen = ({ navigation }: any) => {
             <View style={tw`px-6`}>
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
                 {/* Budget Metrics Card */}
-                <BudgetMetricsCard metrics={budgetMetrics} />
+                {/* <BudgetMetricsCard metrics={budgetMetrics} /> */}
 
                 {/* Section Header */}
                 <View style={tw`flex-row justify-between items-center mb-3`}>

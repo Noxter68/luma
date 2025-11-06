@@ -64,7 +64,7 @@ export const BudgetMetricsCard = ({ metrics, categoryBudgets }: BudgetMetricsCar
         <View>
           <Text style={tw.style('text-base font-semibold mb-3 px-1', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('categoryBudgets')}</Text>
 
-          {categoryBudgets.map((catBudget) => {
+          {categoryBudgets?.map((catBudget) => {
             const categoryData = getCategoryById(catBudget.category);
             const IconComponent = categoryData?.icon;
 

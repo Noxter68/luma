@@ -14,7 +14,7 @@ interface BudgetGaugeProps {
 
 export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGaugeProps) => {
   const { isDark, colors } = useTheme();
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
 
   const safeIncome = Number(income) || 0;
   const safeRecurring = Number(recurring) || 0;
@@ -27,24 +27,17 @@ export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGa
   let remainingPercentage: number;
 
   if (mode === 'revenue') {
+    // MODE REVENUE : Tout par rapport au revenue total
     const availableAfterRecurring = safeIncome > 0 ? safeIncome - safeRecurring : safeBudget;
     remaining = availableAfterRecurring - safeSpent;
     total = safeIncome > 0 ? safeIncome : safeBudget;
     remainingPercentage = total > 0 ? (remaining / total) * 100 : 0;
   } else {
+    // MODE BUDGET : Tout par rapport au budget défini
     remaining = safeBudget - safeSpent;
     total = safeBudget;
     remainingPercentage = safeBudget > 0 ? (remaining / safeBudget) * 100 : 0;
   }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
-      style: 'currency',
-      currency: locale === 'fr' ? 'EUR' : 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   const getDisplayPercentage = () => {
     if (isNaN(remainingPercentage)) return '0';
@@ -57,35 +50,36 @@ export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGa
   const displayPercentage = getDisplayPercentage();
 
   const getStatus = () => {
+    // Si aucun budget défini en mode budget
     if (safeBudget === 0 && mode === 'budget') {
       return { label: t('budgetProgress.noBudget'), color: isDark ? colors.dark.textTertiary : colors.light.textTertiary };
     }
 
+    // Si aucun revenu défini en mode revenue
     if (safeIncome === 0 && mode === 'revenue') {
       return { label: t('budgetProgress.noRevenue'), color: isDark ? colors.dark.textTertiary : colors.light.textTertiary };
     }
 
-    // Utiliser la palette pour les couleurs
     if (remainingPercentage >= 80) return { label: 'Excellent', color: colors.primary };
     if (remainingPercentage >= 50) return { label: 'Parfait', color: colors.primaryLight };
-    if (remainingPercentage >= 25) return { label: 'Bon rythme', color: colors.primaryLight };
-    if (remainingPercentage >= 10) return { label: 'Attention', color: isDark ? colors.dark.textSecondary : colors.light.textSecondary };
-    if (remainingPercentage > 0) return { label: 'Prudence', color: isDark ? colors.dark.textSecondary : colors.light.textSecondary };
-    return { label: 'Dépassé', color: isDark ? colors.dark.textSecondary : colors.light.textSecondary };
+    if (remainingPercentage >= 25) return { label: 'Bon rythme', color: '#F4A460' };
+    if (remainingPercentage >= 10) return { label: 'Attention', color: '#FF8C42' };
+    if (remainingPercentage > 0) return { label: 'Prudence', color: '#FF6B6B' };
+    return { label: 'Dépassé', color: '#E63946' };
   };
 
   const status = getStatus();
   const backgroundColor = isDark ? colors.dark.border : colors.light.border;
 
   return (
-    <View style={tw`items-center justify-center pt-6 pb-1 relative`}>
+    <View style={tw`items-center justify-center pt-3 pb-1 relative`}>
       {/* Background arc */}
       <View style={tw`items-center justify-center`}>
         <AnimatedCircularProgress size={240} width={20} fill={100} tintColor={backgroundColor} backgroundColor="transparent" rotation={270} arcSweepAngle={180} lineCap="round" duration={0} />
       </View>
 
       {/* Progress arc */}
-      <View style={tw`items-center justify-center absolute top-6`}>
+      <View style={tw`items-center justify-center absolute top-3`}>
         <AnimatedCircularProgress
           size={240}
           width={20}
@@ -99,12 +93,10 @@ export const BudgetGauge = ({ budget, spent, recurring, income, mode }: BudgetGa
         />
       </View>
 
-      {/* Center text */}
-      <View style={[tw`items-center justify-center absolute`, { top: 110 }]}>
+      {/* Center text - Aligned with arc center */}
+      <View style={[tw`items-center justify-center absolute`, { top: 117 }]}>
         <Text style={[tw`text-4xl font-bold mb-1`, { color: status.color }]}>{displayPercentage}%</Text>
-        <Text style={[tw`text-lg font-semibold mb-2`, { color: status.color }]}>{status.label}</Text>
-        {/* Afficher le montant du budget en mode budget */}
-        {mode === 'budget' && safeBudget > 0 && <Text style={tw`text-sm text-white/70`}>{formatCurrency(safeBudget)}</Text>}
+        <Text style={[tw`text-lg font-semibold`, { color: status.color }]}>{status.label}</Text>
       </View>
     </View>
   );

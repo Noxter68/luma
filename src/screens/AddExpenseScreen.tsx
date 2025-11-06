@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
-import { Check, ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,12 +16,13 @@ interface AddExpenseScreenProps {
 }
 
 export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
-  const { addExpense } = useBudgetStore();
-  const { t, locale } = useTranslation();
+  const { addExpense, addRecurringExpense } = useBudgetStore();
+  const { t } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
@@ -40,20 +41,29 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     setLoading(true);
 
     try {
-      addExpense({
-        amount: parsedAmount,
-        category,
-        description: description || undefined,
-        date: new Date().toISOString(),
-      });
-
-      Alert.alert(t('success'), t('expenseAdded'), [{ text: 'OK', onPress: () => navigation.navigate('Home') }]);
+      if (isRecurring) {
+        addRecurringExpense({
+          amount: parsedAmount,
+          category,
+          description: description || undefined,
+          isActive: true,
+        });
+        Alert.alert(t('success'), t('recurringAdded'), [{ text: 'OK', onPress: () => navigation.navigate('Home') }]);
+      } else {
+        addExpense({
+          amount: parsedAmount,
+          category,
+          description: description || undefined,
+          date: new Date().toISOString(),
+        });
+        Alert.alert(t('success'), t('expenseAdded'), [{ text: 'OK', onPress: () => navigation.navigate('Home') }]);
+      }
 
       setAmount('');
       setCategory('');
       setDescription('');
     } catch (error) {
-      Alert.alert(t('error'), t('cannotAddExpense'));
+      Alert.alert(t('error'), isRecurring ? t('cannotAddRecurring') : t('cannotAddExpense'));
     } finally {
       setLoading(false);
     }
@@ -96,6 +106,20 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
             {/* Content Section */}
             <View style={tw`px-6`}>
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
+                {/* Recurring Toggle */}
+                <Card style={tw`p-0 overflow-hidden mb-4`}>
+                  <TouchableOpacity onPress={() => setIsRecurring(!isRecurring)} style={tw`px-4 py-4 flex-row items-center justify-between`}>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw.style('text-base font-semibold mb-1', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('expense.recurring')}</Text>
+                      <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expense.recurringHint')}</Text>
+                    </View>
+
+                    <View style={tw.style('w-12 h-7 rounded-full p-0.5', isRecurring ? `bg-[${colors.primary}]` : `bg-[${isDark ? colors.dark.border : colors.light.border}]`)}>
+                      <View style={tw.style('w-6 h-6 rounded-full bg-white', isRecurring && 'ml-auto')} />
+                    </View>
+                  </TouchableOpacity>
+                </Card>
+
                 {/* Category Selection Button */}
                 <Card style={tw`p-0 overflow-hidden mb-4`}>
                   <View style={tw`px-4 py-3 border-b ${isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`}`}>

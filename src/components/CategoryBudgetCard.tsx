@@ -40,7 +40,7 @@ export const CategoryBudgetCard = ({ categoryBudget, onEdit }: CategoryBudgetCar
     <TouchableOpacity
       onPress={onEdit}
       activeOpacity={0.7}
-      style={tw.style('rounded-2xl p-5 mb-3', isDark ? `bg-[${colors.dark.card}]` : 'bg-white', 'border', isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`)}
+      style={tw.style('rounded-2xl p-5 mb-2', isDark ? `bg-[${colors.dark.card}]` : 'bg-white', 'border', isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`)}
     >
       {/* Header Row */}
       <View style={tw`flex-row items-start justify-between mb-4`}>
@@ -49,7 +49,7 @@ export const CategoryBudgetCard = ({ categoryBudget, onEdit }: CategoryBudgetCar
           {/* Icon avec background subtil */}
           {Icon && (
             <View style={tw.style('w-6 h-6 rounded-xl items-center justify-center', `bg-[${colors.primary}]/10`)}>
-              <Icon size={22} color={colors.primary} strokeWidth={2} />
+              <Icon size={14} color={colors.primary} strokeWidth={2} />
             </View>
           )}
 

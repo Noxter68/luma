@@ -9,8 +9,6 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { RevenueScreen } from './src/screens/RevenueScreen';
 import { AddExpenseScreen } from './src/screens/AddExpenseScreen';
 import { AddIncomeScreen } from './src/screens/AddIncomeScreen';
-import { RecurringExpensesScreen } from './src/screens/RecurringExpensesScreen';
-import { AddRecurringScreen } from './src/screens/AddRecurringScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { BudgetScreen } from './src/screens/BudgetScreen';
 import { AddCategoryBudgetScreen } from './src/screens/AddCategoryBudgetScreen';
@@ -18,8 +16,9 @@ import { initDatabase } from './src/database';
 import './src/i18n';
 import { useTranslation } from './src/hooks/useTranslation';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
-import { Home, Wallet, PlusCircle, Repeat, Settings, DollarSign } from 'lucide-react-native';
+import { Home, Wallet, PlusCircle, Repeat, Settings, DollarSign, BarChart3 } from 'lucide-react-native';
 import { CategorySelectorScreen } from './src/screens/CategorySelectorScreen';
+import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -72,11 +71,12 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Recurring"
-        component={RecurringExpensesScreen}
+        name="Analytics"
+        component={AnalyticsScreen}
         options={{
-          title: t('recurringExpenses'),
-          tabBarIcon: ({ color, size }) => <Repeat size={size} color={color} />,
+          title: t('analytics.title'),
+          tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} />,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -106,14 +106,6 @@ function AppNavigator() {
       }}
     >
       <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="AddRecurring"
-        component={AddRecurringScreen}
-        options={{
-          title: t('addRecurringExpense'),
-          presentation: 'modal',
-        }}
-      />
       <Stack.Screen
         name="AddIncome"
         component={AddIncomeScreen}

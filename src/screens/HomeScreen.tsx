@@ -182,7 +182,7 @@ export const HomeScreen = () => {
                         {
                           translateX: slideAnim.interpolate({
                             inputRange: [0, 1],
-                            outputRange: [0, 125], // Distance ajustée pour rester dans le container
+                            outputRange: [0, 125],
                           }),
                         },
                       ],
@@ -203,11 +203,11 @@ export const HomeScreen = () => {
                 <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={totalIncome} mode={gaugeView} />
               </Animated.View>
 
-              {/* Stats Row */}
-              <View style={tw`flex-row justify-between px-4`}>
+              {/* Stats Row with Fade Animation */}
+              <Animated.View style={[tw`flex-row justify-between px-2`, { opacity: fadeAnim }]}>
                 <View style={tw`items-center flex-1`}>
-                  <Text style={tw`text-white/70 text-xs mb-1`}>{totalIncome > 0 ? 'Revenue' : 'Projection'}</Text>
-                  <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(totalIncome > 0 ? totalIncome : budgetAmount)}</Text>
+                  <Text style={tw`text-white/70 text-xs mb-1`}>{gaugeView === 'revenue' ? (totalIncome > 0 ? 'Revenue' : 'Projection') : 'Budget'}</Text>
+                  <Text style={tw`text-white text-lg font-bold`}>{gaugeView === 'revenue' ? formatCurrency(totalIncome > 0 ? totalIncome : budgetAmount) : formatCurrency(budgetAmount)}</Text>
                 </View>
 
                 <View style={tw`w-px h-12 bg-white/20`} />
@@ -223,7 +223,7 @@ export const HomeScreen = () => {
                   <Text style={tw`text-white/70 text-xs mb-1`}>Spent</Text>
                   <Text style={tw`text-white text-lg font-bold`}>{formatCurrency(totalSpent)}</Text>
                 </View>
-              </View>
+              </Animated.View>
             </View>
 
             {/* Content Section */}

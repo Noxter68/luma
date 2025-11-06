@@ -36,13 +36,14 @@
     "gift": "Cadeau",
     "other": "Autre"
   },
+
   "expense": {
-    "add": "Dépenses récentes",
     "amount": "Montant",
     "category": "Catégorie",
-    "description": "Description (optionnel)",
-    "date": "Date",
-    "save": "Enregistrer"
+    "description": "Description",
+    "save": "Enregistrer",
+    "recurring": "Dépense récurrente",
+    "recurringHint": "Cette dépense sera automatiquement ajoutée chaque mois"
   },
   "addExpense": "Ajouter",
   "categoryBudgets": "Budgets par catégorie",
@@ -171,5 +172,38 @@
     "overBudget": "Dépassé",
     "overview": "Vue d'ensemble",
     "toSave": "à épargner"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "subtitle": "Suivez vos performances financières",
+    "months": "mois",
+    "month": "Mois",
+    "currentMonth": "Mois actuel",
+    "totalIncome": "Revenus",
+    "expenses": "Dépenses",
+    "savings": "Épargne",
+    "totalSpent": "Total dépensé",
+    "totalSaved": "Total épargné",
+    "keyMetrics": "Indicateurs clés",
+    "avgExpense": "Moy. Dépenses / mois",
+    "avgIncome": "Moy. Revenus / mois",
+    "recurring": "Récurrent mensuel",
+    "savingsRate": "Taux d'épargne",
+    "financialScore": "Score Financier",
+    "scoreExcellent": "Excellent ! Continuez comme ça 🎉",
+    "scoreGood": "Bon travail ! Vous êtes sur la bonne voie 👍",
+    "scoreFair": "Correct, mais peut mieux faire 💪",
+    "scoreNeedsWork": "Des améliorations sont nécessaires 📈",
+    "prediction": "Prédiction fin d'année",
+    "predictionDesc": "À ce rythme, vous aurez économisé {{amount}} d'ici la fin d'année ({{months}} mois restants)",
+    "projected": "projetés",
+    "pattern": "Analyse de vos habitudes",
+    "patternDesc": "Vous dépensez en moyenne {{amount}} le {{day}}",
+    "topCategories": "Top catégories",
+    "transactions": "transactions",
+    "noData": "Aucune donnée disponible",
+    "yearProjection": "Projection Annuelle",
+
+    "projectionDesc": "Sur cette tendance, vous pourriez économiser {amount} d'ici fin d'année ({months} mois restants)"
   }
 }
