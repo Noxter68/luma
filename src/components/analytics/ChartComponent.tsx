@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, Animated, Dimensions, TouchableOpacity } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText, Defs, LinearGradient as SvgGradient, Stop, Rect, Line, G } from 'react-native-svg';
 import { BarChart3, TrendingUp } from 'lucide-react-native';
@@ -73,6 +73,14 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({ data, mode, onPo
   const minValue = Math.min(...values, 0);
   const range = maxValue - minValue || 1;
 
+  // Calculate bar heights - MEMOIZED
+  const barHeights = useMemo(() => {
+    return values.map((value) => {
+      // Hauteur proportionnelle basée sur la vraie valeur et l'échelle globale
+      return ((value - minValue) / range) * chartableHeight;
+    });
+  }, [values, minValue, range, chartableHeight]);
+
   // Calculate points for line chart
   const calculateLinePoints = () => {
     const stepX = data.length > 1 ? chartableWidth / (data.length - 1) : chartableWidth;
@@ -111,12 +119,12 @@ export const ChartComponent: React.FC<ChartComponentProps> = ({ data, mode, onPo
     const totalBarWidth = barWidth + barSpacing;
 
     return values.map((value, i) => {
-      const barHeight = ((Math.abs(value) - minValue) / range) * chartableHeight;
+      const height = barHeights[i] || 0;
       return {
         x: PADDING_HORIZONTAL + i * totalBarWidth + barSpacing / 2,
-        y: PADDING_TOP + chartableHeight - barHeight,
+        y: PADDING_TOP + chartableHeight - height,
         width: barWidth,
-        height: barHeight,
+        height: height,
         value: value,
       };
     });

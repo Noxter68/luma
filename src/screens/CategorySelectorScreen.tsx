@@ -103,29 +103,9 @@ export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorSc
                           return (
                             <View key={category.id}>
                               <TouchableOpacity onPress={() => handleSelectCategory(category.id)} style={tw`px-4 py-3 flex-row items-center`}>
-                                {/* Icon with Gradient */}
-                                <View style={tw`w-9 h-9 rounded-lg mr-3 overflow-hidden`}>
-                                  <LinearGradient
-                                    colors={
-                                      isSelected
-                                        ? isDark
-                                          ? [colors.primary, colors.primaryDark]
-                                          : [colors.primaryLight, colors.primary]
-                                        : isDark
-                                        ? [colors.dark.surface, colors.dark.surface]
-                                        : [colors.light.border, colors.light.border]
-                                    }
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={tw`w-full h-full items-center justify-center`}
-                                  >
-                                    {isSelected && (
-                                      <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
-                                        <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
-                                      </View>
-                                    )}
-                                    <IconComponent size={18} color={isSelected ? 'white' : isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2.5} />
-                                  </LinearGradient>
+                                {/* Icon - TOUJOURS le même style (comme HomeScreen) */}
+                                <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                                  <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                                 </View>
 
                                 {/* Label */}
@@ -135,12 +115,20 @@ export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorSc
                                   {t(category.translationKey)}
                                 </Text>
 
-                                {/* Check Icon */}
+                                {/* Check Icon - OPTION 1: Fond primary + icône blanche (contraste élevé) */}
                                 {isSelected && (
                                   <View style={tw.style('w-6 h-6 rounded-full items-center justify-center', `bg-[${colors.primary}]`)}>
                                     <Check size={14} color="white" strokeWidth={3} />
                                   </View>
                                 )}
+
+                                {/* Check Icon - OPTION 2: Fond subtil + icône primary (plus doux) 
+                                {isSelected && (
+                                  <View style={tw.style('w-6 h-6 rounded-full items-center justify-center', `bg-[${colors.primary}]/20`)}>
+                                    <Check size={14} color={colors.primary} strokeWidth={3} />
+                                  </View>
+                                )}
+                                */}
                               </TouchableOpacity>
 
                               {/* Divider */}

@@ -9,14 +9,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { INCOME_SOURCES } from '../utils/incomeSources';
-import { format } from 'date-fns';
 
 interface AddIncomeScreenProps {
   navigation: any;
 }
 
 export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
-  const { addIncome, addRecurringIncome, currentMonth } = useBudgetStore(); // ⭐ Ajouter addRecurringIncome
+  const { addIncome, addRecurringIncome, currentMonth } = useBudgetStore();
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const [amount, setAmount] = useState('');
@@ -42,7 +41,7 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
 
     try {
       if (isRecurring) {
-        // ⭐ Créer un TEMPLATE récurrent
+        // Créer un TEMPLATE récurrent
         addRecurringIncome({
           amount: parsedAmount,
           source: source as 'salary' | 'bonus' | 'freelance' | 'gift' | 'other',
@@ -121,13 +120,9 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
                       return (
                         <View key={src.id}>
                           <TouchableOpacity onPress={() => setSource(src.id)} style={tw`flex-row items-center px-3 py-3`}>
-                            <View
-                              style={tw.style(
-                                'w-10 h-10 rounded-xl items-center justify-center mr-3',
-                                isSelected ? `bg-[${colors.primary}]/15` : isDark ? `bg-[${colors.dark.surface}]` : `bg-[${colors.light.bg}]`
-                              )}
-                            >
-                              <IconComponent size={20} color={isSelected ? colors.primary : isDark ? colors.dark.textSecondary : colors.light.textSecondary} strokeWidth={2.5} />
+                            {/* Icon - TOUJOURS le même style (comme HomeScreen) */}
+                            <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                              <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                             </View>
 
                             <Text style={tw.style('flex-1 text-base font-medium', isSelected ? `text-[${colors.primary}]` : `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>

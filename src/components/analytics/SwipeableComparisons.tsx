@@ -6,6 +6,9 @@ import { ComparisonBar } from './ComparisonBar';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// ============================================
+// TYPES
+// ============================================
 interface SwipeableComparisonsProps {
   expensesData: {
     previous: number;
@@ -26,13 +29,25 @@ interface SwipeableComparisonsProps {
   locale: string;
 }
 
+// ============================================
+// COMPONENT
+// ============================================
 export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expensesData, savingsData, dailyData, formatCurrency, isDark, colors, locale }) => {
+  // ============================================
+  // SHARED VALUES
+  // ============================================
   const scrollX = useSharedValue(0);
   const currentIndex = useSharedValue(0);
 
+  // ============================================
+  // DIMENSIONS
+  // ============================================
   const CARD_PADDING = 16;
   const CONTAINER_WIDTH = screenWidth - 32 - CARD_PADDING * 2;
 
+  // ============================================
+  // HANDLERS
+  // ============================================
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
@@ -40,50 +55,84 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
     },
   });
 
-  // Indicator animations
+  // ============================================
+  // ANIMATIONS
+  // ============================================
+
+  // Indicateur 1: Expenses (actif quand scrollX = 0)
   const indicator1Style = useAnimatedStyle(() => {
-    const width = interpolate(scrollX.value, [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2], [16, 8, 8]);
-    return { width: withTiming(width, { duration: 200 }) };
+    const width = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [16, 8, 8] // Large sur 1er chart, petit sur les autres
+    );
+    const opacity = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [1, 0.3, 0.3] // Opacité complète sur 1er chart, réduite sur les autres
+    );
+    return {
+      width: withTiming(width, { duration: 120 }),
+      opacity: withTiming(opacity, { duration: 120 }),
+    };
   });
 
+  // Indicateur 2: Savings (actif quand scrollX = CONTAINER_WIDTH)
   const indicator2Style = useAnimatedStyle(() => {
-    const width = interpolate(scrollX.value, [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2], [8, 16, 8]);
-    return { width: withTiming(width, { duration: 200 }) };
+    const width = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [8, 16, 8] // Petit, puis large sur 2ème chart, puis petit
+    );
+    const opacity = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [0.3, 1, 0.3] // Opacité réduite, puis complète sur 2ème chart, puis réduite
+    );
+    return {
+      width: withTiming(width, { duration: 120 }),
+      opacity: withTiming(opacity, { duration: 120 }),
+    };
   });
 
+  // Indicateur 3: Daily Average (actif quand scrollX = CONTAINER_WIDTH * 2)
   const indicator3Style = useAnimatedStyle(() => {
-    const width = interpolate(scrollX.value, [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2], [8, 8, 16]);
-    return { width: withTiming(width, { duration: 200 }) };
+    const width = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [8, 8, 16] // Petit sur les 2 premiers, large sur le 3ème
+    );
+    const opacity = interpolate(
+      scrollX.value,
+      [0, CONTAINER_WIDTH, CONTAINER_WIDTH * 2],
+      [0.3, 0.3, 1] // Opacité réduite sur les 2 premiers, complète sur le 3ème
+    );
+    return {
+      width: withTiming(width, { duration: 120 }),
+      opacity: withTiming(opacity, { duration: 120 }),
+    };
   });
 
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <View>
-      {/* Indicators */}
+      {/* Indicateurs des 3 comparaisons */}
       <View style={tw`flex-row justify-center mb-4`}>
         <View style={tw`flex-row gap-1`}>
+          {/* Indicateur 1: Expenses */}
           <Animated.View style={[tw`h-1 rounded-full`, { backgroundColor: colors.primary }, indicator1Style]} />
-          <Animated.View
-            style={[
-              tw`h-1 rounded-full`,
-              {
-                backgroundColor: isDark ? colors.dark?.border : colors.light?.border,
-              },
-              indicator2Style,
-            ]}
-          />
-          <Animated.View
-            style={[
-              tw`h-1 rounded-full`,
-              {
-                backgroundColor: isDark ? colors.dark?.border : colors.light?.border,
-              },
-              indicator3Style,
-            ]}
-          />
+
+          {/* Indicateur 2: Savings */}
+          <Animated.View style={[tw`h-1 rounded-full`, { backgroundColor: colors.primary }, indicator2Style]} />
+
+          {/* Indicateur 3: Daily Average */}
+          <Animated.View style={[tw`h-1 rounded-full`, { backgroundColor: colors.primary }, indicator3Style]} />
         </View>
       </View>
 
-      {/* Swipeable Carousel */}
+      {/* Carousel swipeable avec les 3 comparaisons */}
       <Animated.ScrollView
         horizontal
         pagingEnabled
@@ -95,7 +144,7 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
         snapToAlignment="start"
         contentContainerStyle={{ width: CONTAINER_WIDTH * 3 }}
       >
-        {/* Expenses Comparison */}
+        {/* ==================== EXPENSES COMPARISON ==================== */}
         <View style={{ width: CONTAINER_WIDTH }}>
           <Text
             style={{
@@ -119,7 +168,7 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
           />
         </View>
 
-        {/* Savings Comparison */}
+        {/* ==================== SAVINGS COMPARISON ==================== */}
         <View style={{ width: CONTAINER_WIDTH }}>
           <Text
             style={{
@@ -143,7 +192,7 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
           />
         </View>
 
-        {/* Daily Average */}
+        {/* ==================== DAILY AVERAGE COMPARISON ==================== */}
         <View style={{ width: CONTAINER_WIDTH }}>
           <Text
             style={{
@@ -167,7 +216,7 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
             showPercentage={false}
           />
 
-          {/* Projection */}
+          {/* Projection du total du mois */}
           <View
             style={[
               tw`p-3 rounded-xl mt-4 mx-8`,
@@ -189,7 +238,7 @@ export const SwipeableComparisons: React.FC<SwipeableComparisonsProps> = ({ expe
         </View>
       </Animated.ScrollView>
 
-      {/* Swipe hint */}
+      {/* Indication de swipe */}
       <Text
         style={[
           tw`text-center mt-3`,

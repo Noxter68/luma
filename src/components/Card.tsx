@@ -12,7 +12,7 @@ export const Card = ({ children, style }: CardProps) => {
   const { isDark, colors } = useTheme();
 
   // Padding par défaut : p-4 (16px)
-  const baseStyles = tw`rounded-2xl p-4`;
+  const baseStyles = tw`rounded-2xl p-2`;
 
   const themedStyles: ViewStyle = isDark
     ? {

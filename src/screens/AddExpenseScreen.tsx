@@ -137,19 +137,9 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
                   >
                     {selectedCategoryData ? (
                       <>
-                        {/* Selected Category Icon */}
-                        <View style={tw`w-9 h-9 rounded-lg mr-3 overflow-hidden`}>
-                          <LinearGradient
-                            colors={isDark ? [colors.primary, colors.primaryDark] : [colors.primaryLight, colors.primary]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={tw`w-full h-full items-center justify-center`}
-                          >
-                            <View style={tw`absolute top-0 left-0 w-full h-1/2 opacity-30`}>
-                              <LinearGradient colors={['rgba(255,255,255,0.4)', 'transparent']} style={tw`w-full h-full`} />
-                            </View>
-                            <selectedCategoryData.icon size={18} color="white" strokeWidth={2.5} />
-                          </LinearGradient>
+                        {/* Selected Category Icon - Style harmonisé (comme HomeScreen) */}
+                        <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                          <selectedCategoryData.icon size={20} color={colors.primary} strokeWidth={2} />
                         </View>
 
                         {/* Label */}

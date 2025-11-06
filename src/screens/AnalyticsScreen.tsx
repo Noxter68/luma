@@ -194,7 +194,7 @@ export const AnalyticsScreen = ({ navigation }: AnalyticsScreenProps) => {
               {/* ============================================ */}
               {/* CONTENT CONTAINER */}
               {/* ============================================ */}
-              <View style={tw`px-4`}>
+              <View style={tw`px-2`}>
                 <LinearGradient
                   colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]}
                   style={tw`rounded-3xl px-6 pt-4 pb-6`}
@@ -316,8 +316,8 @@ export const AnalyticsScreen = ({ navigation }: AnalyticsScreenProps) => {
                               <View style={tw`flex-row items-center flex-1 gap-3`}>
                                 {/* Category Icon */}
                                 {IconComponent && (
-                                  <View style={[tw`w-10 h-10 rounded-xl justify-center items-center`, { backgroundColor: `${colors.primary}10` }]}>
-                                    <IconComponent size={18} color={colors.primary} strokeWidth={2} />
+                                  <View style={tw.style('w-10 h-10 rounded-full justify-center items-center', `bg-[${colors.primary}]/20`)}>
+                                    <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                                   </View>
                                 )}
 
@@ -430,7 +430,7 @@ export const AnalyticsScreen = ({ navigation }: AnalyticsScreenProps) => {
                               <View style={tw`flex-row items-center gap-3 flex-1`}>
                                 {/* Category Badge */}
                                 {IconComponent && (
-                                  <View style={[tw`w-11 h-11 rounded-xl justify-center items-center`, { backgroundColor: `${colors.primary}12` }]}>
+                                  <View style={tw.style('w-11 h-11 rounded-full justify-center items-center', `bg-[${colors.primary}]/20`)}>
                                     <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                                   </View>
                                 )}
