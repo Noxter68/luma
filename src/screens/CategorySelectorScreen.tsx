@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { useState } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,20 +15,49 @@ interface CategorySelectorScreenProps {
   route: {
     params: {
       selectedCategory?: string;
-      onSelect: (categoryId: string) => void;
     };
   };
 }
 
 export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorScreenProps) => {
-  const { selectedCategory, onSelect } = route.params;
+  const { selectedCategory } = route.params;
   const { t } = useTranslation();
   const { isDark, colors, palette } = useTheme();
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Use parent screen's callback if available
+  useLayoutEffect(() => {
+    const parentRoute = navigation
+      .getParent()
+      ?.getState()
+      .routes.find((r: any) => r.name === 'AddExpense' || r.name === 'AddCategoryBudget');
+
+    if (parentRoute) {
+      const onCategorySelect = parentRoute.params?.onCategorySelect;
+      if (onCategorySelect) {
+        navigation.setOptions({
+          onSelect: onCategorySelect,
+        });
+      }
+    }
+  }, [navigation]);
+
   const handleSelectCategory = (categoryId: string) => {
-    onSelect(categoryId);
+    // Try to use the callback from options first
+    const onSelect = route.params?.onSelect || navigation.getState()?.routes?.[navigation.getState().index]?.params?.onCategorySelect;
+
+    if (onSelect && typeof onSelect === 'function') {
+      onSelect(categoryId);
+    } else {
+      // Fallback: use navigation state to pass back the selected category
+      navigation.navigate({
+        name: navigation.getState().routes[navigation.getState().index - 1].name,
+        params: { selectedCategory: categoryId },
+        merge: true,
+      });
+    }
+
     navigation.goBack();
   };
 
@@ -103,7 +132,7 @@ export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorSc
                           return (
                             <View key={category.id}>
                               <TouchableOpacity onPress={() => handleSelectCategory(category.id)} style={tw`px-4 py-3 flex-row items-center`}>
-                                {/* Icon - TOUJOURS le même style (comme HomeScreen) */}
+                                {/* Icon */}
                                 <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
                                   <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                                 </View>
@@ -115,24 +144,15 @@ export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorSc
                                   {t(category.translationKey)}
                                 </Text>
 
-                                {/* Check Icon - OPTION 1: Fond primary + icône blanche (contraste élevé) */}
+                                {/* Selected Check */}
                                 {isSelected && (
                                   <View style={tw.style('w-6 h-6 rounded-full items-center justify-center', `bg-[${colors.primary}]`)}>
-                                    <Check size={14} color="white" strokeWidth={3} />
+                                    <Check size={14} color="white" strokeWidth={2.5} />
                                   </View>
                                 )}
-
-                                {/* Check Icon - OPTION 2: Fond subtil + icône primary (plus doux) 
-                                {isSelected && (
-                                  <View style={tw.style('w-6 h-6 rounded-full items-center justify-center', `bg-[${colors.primary}]/20`)}>
-                                    <Check size={14} color={colors.primary} strokeWidth={3} />
-                                  </View>
-                                )}
-                                */}
                               </TouchableOpacity>
 
-                              {/* Divider */}
-                              {!isLast && <View style={tw.style('h-px ml-16 mr-4', `bg-[${isDark ? colors.dark.border : colors.light.border}]`)} />}
+                              {!isLast && <View style={tw.style('h-px ml-16 mr-3', `bg-[${isDark ? colors.dark.border : colors.light.border}]`)} />}
                             </View>
                           );
                         })}
@@ -140,12 +160,6 @@ export const CategorySelectorScreen = ({ navigation, route }: CategorySelectorSc
                     </View>
                   );
                 })}
-
-                {filteredCategories.length === 0 && (
-                  <View style={tw`py-20 items-center`}>
-                    <Text style={tw.style('text-base text-center', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('noCategoryFound')}</Text>
-                  </View>
-                )}
               </ScrollView>
             </LinearGradient>
           </View>

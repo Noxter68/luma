@@ -1,10 +1,10 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert, Animated } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
-import { format, addMonths, subMonths } from 'date-fns';
+import { format, addMonths, subMonths, startOfDay, isToday, isYesterday } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
-import { Home, ShoppingCart, Car, Popcorn, Smartphone, Lightbulb, Package, Trash2, ChevronLeft, ChevronRight, Briefcase, Gift, Laptop, DollarSign } from 'lucide-react-native';
+import { Trash2, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react-native';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BudgetGauge } from '../components/BudgetGauge';
+import { getCategoryById } from '../utils/categories';
 
 export const HomeScreen = () => {
   const { budget, expenses, recurringExpenses, incomes, totalSpent, totalRecurring, totalIncome, refresh, deleteExpense, setCurrentMonth, currentMonth } = useBudgetStore();
@@ -24,11 +25,43 @@ export const HomeScreen = () => {
   const [gaugeView, setGaugeView] = useState<'revenue' | 'budget'>('revenue');
   const [fadeAnim] = useState(new Animated.Value(1));
   const slideAnim = useState(new Animated.Value(0))[0];
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollToTopButtonOpacity = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const monthStr = format(selectedDate, 'yyyy-MM');
     setCurrentMonth(monthStr);
   }, [selectedDate]);
+
+  // Animation du bouton scroll to top
+  useEffect(() => {
+    const listenerId = scrollY.addListener(({ value }) => {
+      const threshold = 150;
+
+      if (value > threshold) {
+        Animated.spring(scrollToTopButtonOpacity, {
+          toValue: 1,
+          useNativeDriver: true,
+          damping: 15,
+          stiffness: 150,
+        }).start();
+      } else {
+        Animated.spring(scrollToTopButtonOpacity, {
+          toValue: 0,
+          useNativeDriver: true,
+          damping: 15,
+          stiffness: 150,
+        }).start();
+      }
+    });
+
+    return () => scrollY.removeListener(listenerId);
+  }, []);
+
+  const handleScrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale === 'fr' ? 'fr-FR' : 'en-US', {
@@ -49,32 +82,31 @@ export const HomeScreen = () => {
     });
   };
 
-  const getCategoryIcon = (categoryId: string) => {
-    const icons: Record<string, any> = {
-      rent: Home,
-      food: ShoppingCart,
-      transport: Car,
-      entertainment: Popcorn,
-      subscription: Smartphone,
-      utilities: Lightbulb,
-      other: Package,
-    };
-    return icons[categoryId] || Package;
+  const formatDaySection = (date: Date) => {
+    if (isToday(date)) {
+      return locale === 'fr' ? "Aujourd'hui" : 'Today';
+    }
+    if (isYesterday(date)) {
+      return locale === 'fr' ? 'Hier' : 'Yesterday';
+    }
+    return format(date, 'EEEE d MMMM', {
+      locale: locale === 'fr' ? fr : enUS,
+    });
   };
 
-  const getCategoryLabel = (categoryId: string) => {
-    return t(`categories.${categoryId}`);
+  const getCategoryIcon = (category: string) => {
+    const categoryData = getCategoryById(category);
+    return categoryData?.icon;
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const categoryData = getCategoryById(category);
+    return categoryData ? t(categoryData.translationKey) : category;
   };
 
   const getIncomeSourceIcon = (sourceId: string) => {
-    const icons: Record<string, any> = {
-      salary: Briefcase,
-      bonus: Gift,
-      freelance: Laptop,
-      gift: Gift,
-      other: DollarSign,
-    };
-    return icons[sourceId] || DollarSign;
+    const categoryData = getCategoryById(sourceId);
+    return categoryData?.icon;
   };
 
   const getIncomeSourceLabel = (sourceId: string) => {
@@ -93,18 +125,34 @@ export const HomeScreen = () => {
   };
 
   const renderRightActions = (expenseId: string, expenseDescription: string, dragX: any) => {
+    const opacity = dragX.interpolate({
+      inputRange: [-80, -20, 0],
+      outputRange: [1, 0.9, 0],
+      extrapolate: 'clamp',
+    });
+
     const scale = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [1, 0],
+      inputRange: [-80, 0],
+      outputRange: [1, 0.8],
       extrapolate: 'clamp',
     });
 
     return (
-      <TouchableOpacity onPress={() => handleDeleteExpense(expenseId, expenseDescription)} style={tw`bg-red-500 justify-center items-center w-20 rounded-3xl mb-3`}>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <Trash2 size={24} color="white" strokeWidth={2} />
-        </Animated.View>
-      </TouchableOpacity>
+      <Animated.View
+        style={[
+          tw`justify-center items-center ml-3`,
+          {
+            width: 70,
+            opacity,
+          },
+        ]}
+      >
+        <TouchableOpacity onPress={() => handleDeleteExpense(expenseId, expenseDescription)} style={tw`bg-red-500 w-14 h-14 rounded-2xl items-center justify-center`} activeOpacity={0.8}>
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Trash2 size={22} color="white" strokeWidth={2.5} />
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
@@ -150,11 +198,37 @@ export const HomeScreen = () => {
   const activeRecurring = recurringExpenses.filter((r) => r.isActive);
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
 
+  // Group expenses by day
+  const expensesByDay = useMemo(() => {
+    const grouped: { [key: string]: typeof expenses } = {};
+
+    const sortedExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    sortedExpenses.forEach((expense) => {
+      const dateKey = format(startOfDay(new Date(expense.date)), 'yyyy-MM-dd');
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(expense);
+    });
+
+    return Object.entries(grouped).map(([dateKey, expenses]) => ({
+      date: new Date(dateKey),
+      expenses,
+    }));
+  }, [expenses]);
+
   return (
     <GestureHandlerRootView style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-5`}>
+          <Animated.ScrollView
+            ref={scrollViewRef}
+            style={tw`flex-1`}
+            contentContainerStyle={tw``}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+            scrollEventThrottle={16}
+          >
             {/* Header Section with Gradient */}
             <View style={tw`px-5 pt-2 pb-8`}>
               {/* Month Navigator */}
@@ -228,70 +302,7 @@ export const HomeScreen = () => {
 
             {/* Content Section */}
             <View style={tw.style('rounded-t-3xl px-5 pt-6', `bg-[${isDark ? colors.dark.bg : colors.light.bg}]`)}>
-              {/* Income Summary - Si des incomes existent */}
-              {incomes.length > 0 && (
-                <View style={tw`mb-6`}>
-                  <Card>
-                    <View style={tw`flex-row justify-between items-center mb-3`}>
-                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('revenue.incomeMonth')}</Text>
-                      <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(totalIncome)}</Text>
-                    </View>
-                    <View style={tw`gap-2`}>
-                      {incomes.map((income) => {
-                        const IconComponent = getIncomeSourceIcon(income.source);
-                        return (
-                          <View key={income.id} style={tw`flex-row items-center gap-2`}>
-                            <View style={tw.style('w-7 h-7 rounded-full justify-center items-center', `bg-[${colors.primary}]/20`)}>
-                              <IconComponent size={16} color={colors.primary} strokeWidth={2} />
-                            </View>
-                            <View style={tw`flex-1 flex-row items-center gap-1`}>
-                              <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
-                                {income.description || getIncomeSourceLabel(income.source)}
-                              </Text>
-                              {income.isRecurring && (
-                                <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
-                                  <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
-                                </View>
-                              )}
-                            </View>
-                            <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(income.amount)}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </Card>
-                </View>
-              )}
-
-              {/* Recurring Expenses Summary - Toujours affiché séparément */}
-              {activeRecurring.length > 0 && (
-                <View style={tw`mb-6`}>
-                  <Card>
-                    <View style={tw`flex-row justify-between items-center mb-3`}>
-                      <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>Dépenses récurrentes</Text>
-                      <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(totalRecurring)}</Text>
-                    </View>
-                    <View style={tw`gap-2`}>
-                      {activeRecurring.map((rec) => {
-                        const IconComponent = getCategoryIcon(rec.category);
-                        return (
-                          <View key={rec.id} style={tw`flex-row items-center gap-2`}>
-                            <View style={tw.style('w-7 h-7 rounded-full justify-center items-center', `bg-[${colors.primary}]/20`)}>
-                              <IconComponent size={16} color={colors.primary} strokeWidth={2} />
-                            </View>
-                            <Text style={tw.style('flex-1 text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
-                              {rec.description || getCategoryLabel(rec.category)}
-                            </Text>
-                            <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(rec.amount)}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  </Card>
-                </View>
-              )}
-
-              {/* Recent Expenses - Dépenses réelles du mois uniquement */}
+              {/* Recent Expenses - Groupées par jour */}
               <View style={tw`mb-3`}>
                 <Text style={tw.style('text-lg font-semibold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>Dépenses du mois</Text>
 
@@ -300,41 +311,87 @@ export const HomeScreen = () => {
                     <Text style={tw.style('text-base text-center', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('home.noExpenses')}</Text>
                   </Card>
                 ) : (
-                  expenses.slice(0, 10).map((expense) => {
-                    const IconComponent = getCategoryIcon(expense.category);
-                    const showRecurringBadge = isExpenseRecurring(expense.category, expense.amount, expense.description);
+                  expensesByDay.map((dayGroup, dayIndex) => (
+                    <View key={dayGroup.date.toISOString()} style={tw`${dayIndex > 0 ? 'mt-5' : ''}`}>
+                      {/* Day Header */}
+                      <View style={tw`flex-row items-center justify-between px-1 mb-2`}>
+                        <Text style={tw.style('text-sm font-semibold capitalize', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{formatDaySection(dayGroup.date)}</Text>
+                        <Text style={tw.style('text-sm font-semibold', `text-[${colors.primary}]`)}>{formatCurrency(dayGroup.expenses.reduce((sum, e) => sum + e.amount, 0))}</Text>
+                      </View>
 
-                    return (
-                      <Swipeable key={expense.id} renderRightActions={(progress, dragX) => renderRightActions(expense.id, expense.description || '', dragX)} overshootRight={false} rightThreshold={40}>
-                        <Card style={tw`mb-3`}>
-                          <View style={tw`flex-row items-center`}>
-                            <View style={tw.style('w-10 h-10 rounded-full justify-center items-center mr-3', `bg-[${colors.primary}]/20`)}>
-                              <IconComponent size={20} color={colors.primary} strokeWidth={2} />
-                            </View>
-                            <View style={tw`flex-1`}>
-                              <View style={tw`flex-row items-center gap-1`}>
-                                <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{getCategoryLabel(expense.category)}</Text>
-                                {showRecurringBadge && (
-                                  <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
-                                    <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
+                      {/* Expenses for this day */}
+                      {dayGroup.expenses.map((expense) => {
+                        const IconComponent = getCategoryIcon(expense.category);
+                        const showRecurringBadge = isExpenseRecurring(expense.category, expense.amount, expense.description);
+
+                        return (
+                          <Swipeable
+                            key={expense.id}
+                            renderRightActions={(progress, dragX) => renderRightActions(expense.id, expense.description || '', dragX)}
+                            overshootRight={false}
+                            friction={2}
+                            rightThreshold={40}
+                            enableTrackpadTwoFingerGesture
+                            containerStyle={tw`mb-3`}
+                          >
+                            <Card>
+                              <View style={tw`flex-row items-center`}>
+                                <View style={tw.style('w-10 h-10 rounded-full justify-center items-center mr-3', `bg-[${colors.primary}]/20`)}>
+                                  {IconComponent && <IconComponent size={20} color={colors.primary} strokeWidth={2} />}
+                                </View>
+                                <View style={tw`flex-1`}>
+                                  <View style={tw`flex-row items-center gap-1`}>
+                                    <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+                                      {getCategoryLabel(expense.category)}
+                                    </Text>
+                                    {showRecurringBadge && (
+                                      <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
+                                        <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
+                                      </View>
+                                    )}
                                   </View>
-                                )}
+                                  {expense.description && (
+                                    <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{expense.description}</Text>
+                                  )}
+                                </View>
+                                <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(expense.amount)}</Text>
                               </View>
-                              {expense.description && (
-                                <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{expense.description}</Text>
-                              )}
-                              <Text style={tw.style('text-xs mt-0.5', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>{formatDate(expense.date)}</Text>
-                            </View>
-                            <Text style={tw.style('text-lg font-bold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(expense.amount)}</Text>
-                          </View>
-                        </Card>
-                      </Swipeable>
-                    );
-                  })
+                            </Card>
+                          </Swipeable>
+                        );
+                      })}
+                    </View>
+                  ))
                 )}
               </View>
             </View>
-          </ScrollView>
+          </Animated.ScrollView>
+
+          {/* Scroll to Top Button */}
+          <Animated.View
+            style={[
+              tw`absolute self-center`,
+              {
+                bottom: 10,
+                opacity: scrollToTopButtonOpacity,
+                transform: [
+                  {
+                    scale: scrollToTopButtonOpacity,
+                  },
+                  {
+                    translateY: scrollToTopButtonOpacity.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <TouchableOpacity onPress={handleScrollToTop} style={tw.style('w-12 h-12 rounded-full items-center justify-center shadow-lg', `bg-[${colors.primary}]`)} activeOpacity={0.8}>
+              <ArrowUp size={20} color="white" strokeWidth={2.5} />
+            </TouchableOpacity>
+          </Animated.View>
         </SafeAreaView>
       </LinearGradient>
     </GestureHandlerRootView>
