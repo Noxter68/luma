@@ -10,7 +10,10 @@
     "title": "Budget",
     "monthlyBudget": "Budget mensuel",
     "setBudget": "Définir le budget",
-    "editBudget": "Modifier"
+    "editBudget": "Modifier",
+    "enterAmount": "Entrez le montant",
+    "whatIsBudget": "Qu'est-ce que le budget ?",
+    "budgetExplanation": "Votre budget mensuel représente l'argent disponible après avoir payé vos dépenses récurrentes (loyer, abonnements, etc.). C'est ce que vous pouvez dépenser librement ce mois-ci."
   },
   "revenue": {
     "title": "Revenue",
@@ -27,7 +30,9 @@
     "incomeMonth": "Revenue du mois",
     "selectSource": "Sélectionner une source",
     "incomeAdded": "Revenue ajouté",
-    "cannotAddIncome": "Impossible d'ajouter le revenue"
+    "cannotAddIncome": "Impossible d'ajouter le revenue",
+    "deleteTitle": "Supprimer le revenue",
+    "deleteConfirm": "Voulez-vous vraiment supprimer"
   },
   "incomeSources": {
     "salary": "Salaire",
@@ -36,7 +41,6 @@
     "gift": "Cadeau",
     "other": "Autre"
   },
-
   "expense": {
     "amount": "Montant",
     "category": "Catégorie",
@@ -119,9 +123,40 @@
     "export": "Exporter les données",
     "about": "À propos"
   },
+  "sharedAccounts": {
+    "title": "Comptes Partagés",
+    "noAccounts": "Aucun compte partagé.\nCréez-en un pour gérer vos dépenses communes !",
+    "loading": "Chargement...",
+    "createAccount": "Créer un compte partagé",
+    "accountName": "Nom du compte",
+    "accountNamePlaceholder": "Voyage Bali 2025",
+    "accountNameHint": "Ex: Voyage Bali, Coloc, Marie & David...",
+    "createButton": "Créer le compte",
+    "newAccount": "Nouveau Compte",
+    "nameYourAccount": "Donnez un nom à votre compte partagé",
+    "creationInfo": "💡 Vous pourrez inviter des membres après la création du compte. Tous les membres pourront ajouter des dépenses et gérer le budget.",
+    "createSuccess": "Compte partagé créé avec succès !",
+    "createError": "Impossible de créer le compte",
+    "enterName": "Veuillez entrer un nom pour le compte",
+    "members": "membres",
+    "member": "membre",
+    "details": {
+      "title": "Compte Partagé",
+      "availableBudget": "Budget disponible",
+      "spent": "Dépensé",
+      "remaining": "Restant",
+      "income": "Revenus",
+      "recurring": "Récurrentes",
+      "addExpense": "Ajouter une dépense",
+      "recentExpenses": "Dépenses récentes",
+      "noExpenses": "Aucune dépense pour le moment"
+    }
+  },
   "error": "Erreur",
   "success": "Succès",
   "cancel": "Annuler",
+  "delete": "Supprimer",
+  "understood": "Compris",
   "invalidAmount": "Veuillez entrer un montant valide",
   "selectCategory": "Sélectionner une catégorie",
   "searchCategory": "Rechercher des catégories...",
@@ -146,7 +181,6 @@
   "noRecurringExpenses": "Aucune dépense récurrente",
   "confirmDelete": "Confirmer la suppression",
   "confirmDeleteRecurring": "Voulez-vous vraiment supprimer cette dépense récurrente ?",
-  "delete": "Supprimer",
   "addRecurringExpense": "Ajouter dépense récurrente",
   "recurringAdded": "Dépense récurrente ajoutée",
   "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente",
@@ -190,10 +224,10 @@
     "recurring": "Récurrent mensuel",
     "savingsRate": "Taux d'épargne",
     "financialScore": "Score Financier",
-    "scoreExcellent": "Excellent ! Continuez comme ça 🎉",
-    "scoreGood": "Bon travail ! Vous êtes sur la bonne voie 👍",
-    "scoreFair": "Correct, mais peut mieux faire 💪",
-    "scoreNeedsWork": "Des améliorations sont nécessaires 📈",
+    "scoreExcellent": "Excellent ! Continuez comme ça",
+    "scoreGood": "Bon travail ! Vous êtes sur la bonne voie",
+    "scoreFair": "Correct, mais peut mieux faire",
+    "scoreNeedsWork": "Des améliorations sont nécessaires",
     "prediction": "Prédiction fin d'année",
     "predictionDesc": "À ce rythme, vous aurez économisé {{amount}} d'ici la fin d'année ({{months}} mois restants)",
     "projected": "projetés",
@@ -203,7 +237,6 @@
     "transactions": "transactions",
     "noData": "Aucune donnée disponible",
     "yearProjection": "Projection Annuelle",
-
     "projectionDesc": "Sur cette tendance, vous pourriez économiser {amount} d'ici fin d'année ({months} mois restants)"
   }
 }

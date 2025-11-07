@@ -5,13 +5,14 @@ import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { Plus, Trash2, Info } from 'lucide-react-native';
+import { Plus, Trash2, Info, Users, ChevronRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { INCOME_SOURCES } from '../utils/incomeSources';
 import { CategoryBudgetCard } from '../components/CategoryBudgetCard';
 import { getCategoryById, CATEGORY_GROUPS } from '../utils/categories';
+import { useSharedAccount } from '../hooks/useSharedAccount';
 
 export const RevenueScreen = ({ navigation }: any) => {
   const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, sortedCategoryBudgets } = useBudgetStore();
@@ -21,6 +22,9 @@ export const RevenueScreen = ({ navigation }: any) => {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
+
+  // 🆕 Shared Accounts
+  const { accounts, loading: accountsLoading } = useSharedAccount();
 
   // Animation pour le toggle
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -53,6 +57,20 @@ export const RevenueScreen = ({ navigation }: any) => {
     }).format(amount);
   };
 
+  const handleDeleteIncome = (id: string, description: string) => {
+    Alert.alert(t('revenue.deleteTitle'), `${t('revenue.deleteConfirm')} "${description}"?`, [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('delete'),
+        style: 'destructive',
+        onPress: () => {
+          deleteIncome(id);
+          refresh();
+        },
+      },
+    ]);
+  };
+
   const handleSaveBudget = () => {
     const parsedAmount = parseFloat(budgetAmount);
 
@@ -65,20 +83,9 @@ export const RevenueScreen = ({ navigation }: any) => {
     setIsEditingBudget(false);
   };
 
-  const handleDeleteIncome = (incomeId: string, incomeDescription: string) => {
-    Alert.alert(t('confirmDelete'), incomeDescription || t('revenue.totalRevenue'), [
-      { text: t('cancel'), style: 'cancel' },
-      {
-        text: t('delete'),
-        style: 'destructive',
-        onPress: () => deleteIncome(incomeId),
-      },
-    ]);
-  };
-
   const getIncomeSourceIcon = (sourceId: string) => {
     const source = INCOME_SOURCES.find((s) => s.id === sourceId);
-    return source?.icon;
+    return source?.icon || null;
   };
 
   const getIncomeSourceLabel = (sourceId: string) => {
@@ -113,6 +120,15 @@ export const RevenueScreen = ({ navigation }: any) => {
     navigation.navigate('AddCategoryBudget', {
       mode: 'add',
     });
+  };
+
+  // 🆕 Navigation vers shared account
+  const handleOpenSharedAccount = (accountId: string) => {
+    navigation.navigate('SharedAccountDetails', { accountId });
+  };
+
+  const handleCreateSharedAccount = () => {
+    navigation.navigate('CreateSharedAccount');
   };
 
   return (
@@ -179,25 +195,23 @@ export const RevenueScreen = ({ navigation }: any) => {
                       </TouchableOpacity>
                     </>
                   ) : (
-                    <View style={tw`w-full items-center`}>
-                      <Text style={tw`text-white/80 text-base mb-3`}>{t('budget.monthlyBudget')}</Text>
-                      <View style={tw`w-full px-8`}>
-                        <TextInput
-                          value={budgetAmount}
-                          onChangeText={setBudgetAmount}
-                          placeholder="0"
-                          keyboardType="numeric"
-                          style={tw`text-5xl font-bold text-white text-center py-2 border-b-2 border-white/30 mb-6 min-h-20`}
-                          placeholderTextColor="rgba(255,255,255,0.3)"
-                          autoFocus
-                        />
-                      </View>
-                      <View style={tw`flex-row gap-3 w-full px-8`}>
-                        <TouchableOpacity onPress={() => setIsEditingBudget(false)} style={tw`flex-1 py-3 rounded-xl bg-white/20 items-center`}>
-                          <Text style={tw`text-white text-base font-semibold`}>{t('cancel')}</Text>
+                    <View style={tw`w-full px-8`}>
+                      <Text style={tw`text-white/80 text-base mb-3 text-center`}>{t('budget.enterAmount')}</Text>
+                      <TextInput
+                        value={budgetAmount}
+                        onChangeText={setBudgetAmount}
+                        placeholder="0.00"
+                        keyboardType="decimal-pad"
+                        style={tw`text-6xl font-bold text-white text-center py-2 border-b-2 border-white/30 mb-5`}
+                        placeholderTextColor="rgba(255,255,255,0.3)"
+                        autoFocus
+                      />
+                      <View style={tw`flex-row gap-3`}>
+                        <TouchableOpacity onPress={() => setIsEditingBudget(false)} style={tw`flex-1 py-3 rounded-xl bg-white/10 border-2 border-white/30`}>
+                          <Text style={tw`text-white text-base font-semibold text-center`}>{t('cancel')}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={handleSaveBudget} style={tw`flex-1 py-3 rounded-xl bg-white items-center`}>
-                          <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('expense.save')}</Text>
+                        <TouchableOpacity onPress={handleSaveBudget} style={tw`flex-1 py-3 rounded-xl bg-white border-2 border-white/40`}>
+                          <Text style={tw.style('text-base font-semibold text-center', `text-[${colors.primary}]`)}>{t('expense.save')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -209,10 +223,11 @@ export const RevenueScreen = ({ navigation }: any) => {
             {/* Content Section */}
             <View style={tw`px-6`}>
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
-                {/* Revenue List */}
+                {/* Revenue Content */}
                 {selectedTab === 'revenue' && (
                   <View>
-                    <Text style={tw.style('text-lg font-semibold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('revenue.list')}</Text>
+                    {/* Revenue List Header */}
+                    <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('revenue.list')}</Text>
 
                     {incomes.length === 0 ? (
                       <Card>
@@ -252,6 +267,55 @@ export const RevenueScreen = ({ navigation }: any) => {
                         );
                       })
                     )}
+
+                    {/* 🆕 Shared Accounts Section */}
+                    <View style={tw`mt-6`}>
+                      <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('sharedAccounts.title')}</Text>
+
+                      {accountsLoading ? (
+                        <Card>
+                          <Text style={tw.style('text-base text-center py-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('sharedAccounts.loading')}</Text>
+                        </Card>
+                      ) : accounts.length === 0 ? (
+                        <Card>
+                          <Text style={tw.style('text-base text-center py-8', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('sharedAccounts.noAccounts')}</Text>
+                        </Card>
+                      ) : (
+                        accounts.map((account) => (
+                          <Card key={account.id} style={tw`mb-3`}>
+                            <TouchableOpacity onPress={() => handleOpenSharedAccount(account.id)} style={tw`flex-row items-center`}>
+                              {/* Icon avec emoji/users */}
+                              <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                                <Users size={20} color={colors.primary} strokeWidth={2} />
+                              </View>
+
+                              {/* Account Info */}
+                              <View style={tw`flex-1`}>
+                                <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{account.name}</Text>
+                                <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                                  {account.members.length} {account.members.length === 1 ? t('sharedAccounts.member') : t('sharedAccounts.members')}
+                                </Text>
+                              </View>
+
+                              {/* Arrow */}
+                              <ChevronRight size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
+                            </TouchableOpacity>
+                          </Card>
+                        ))
+                      )}
+
+                      {/* Create Button */}
+                      <TouchableOpacity
+                        onPress={handleCreateSharedAccount}
+                        style={tw.style(
+                          'rounded-2xl p-4 flex-row items-center justify-center gap-2 border-2 border-dashed',
+                          isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`
+                        )}
+                      >
+                        <Plus size={20} color={colors.primary} strokeWidth={2.5} />
+                        <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('sharedAccounts.createAccount')}</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
 
@@ -286,24 +350,17 @@ export const RevenueScreen = ({ navigation }: any) => {
                             <View key={groupKey} style={tw`mb-4`}>
                               {/* Group Header */}
                               <Text style={tw.style('text-xs font-semibold uppercase tracking-wider mb-2 px-1', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                                {t(CATEGORY_GROUPS[groupKey])}
+                                {t((CATEGORY_GROUPS.find((g) => g.id === groupKey) || CATEGORY_GROUPS[0]).translationKey)}
                               </Text>
 
                               {/* Categories in this group */}
                               {categoriesInGroup.map((catBudget) => (
-                                <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onEdit={() => handleEditCategory(catBudget)} />
+                                <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onPress={() => handleEditCategory(catBudget)} />
                               ))}
                             </View>
                           );
                         })}
                       </View>
-                    )}
-
-                    {/* Tip */}
-                    {sortedCategoryBudgets.length > 0 && (
-                      <Text style={tw.style('text-xs text-center italic px-2 mt-3', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                        {locale === 'fr' ? 'Les catégories proches de la limite apparaissent en premier' : 'Categories close to limit appear first'}
-                      </Text>
                     )}
                   </View>
                 )}
@@ -315,15 +372,13 @@ export const RevenueScreen = ({ navigation }: any) => {
 
       {/* Info Modal */}
       <Modal visible={showInfoModal} transparent animationType="fade" onRequestClose={() => setShowInfoModal(false)}>
-        <TouchableOpacity activeOpacity={1} onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/60 justify-center items-center px-8`}>
-          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
-            <View style={tw.style('rounded-3xl p-6 max-w-md', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
-              <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budget.monthlyBudget')}</Text>
-              <Text style={tw.style('text-base leading-6 mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budgetInfo')}</Text>
-              <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
-                <Text style={tw`text-white text-base font-semibold`}>OK</Text>
-              </TouchableOpacity>
-            </View>
+        <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/50 justify-center items-center px-6`} activeOpacity={1}>
+          <TouchableOpacity activeOpacity={1} style={tw.style('rounded-2xl p-6 max-w-sm w-full', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
+            <Text style={tw.style('text-lg font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budget.whatIsBudget')}</Text>
+            <Text style={tw.style('text-base leading-relaxed mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.budgetExplanation')}</Text>
+            <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
+              <Text style={tw`text-white text-base font-semibold`}>{t('understood')}</Text>
+            </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>

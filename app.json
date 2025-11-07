@@ -1,25 +1,29 @@
 {
   "expo": {
-    "name": "luma-app-clean",
-    "slug": "luma-app-clean",
+    "name": "Luma",
+    "slug": "luma",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "luma",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.davidplanchon.luma",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.davidplanchon.luma",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -28,7 +32,13 @@
     },
     "plugins": [
       "expo-sqlite",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-apple-authentication",
+        {
+          "appleTeamId": "XTNS27CALG"
+        }
+      ]
     ]
   }
 }

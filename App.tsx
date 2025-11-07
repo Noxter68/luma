@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import { View, ActivityIndicator } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { RevenueScreen } from './src/screens/RevenueScreen';
 import { AddExpenseScreen } from './src/screens/AddExpenseScreen';
@@ -12,13 +13,18 @@ import { AddIncomeScreen } from './src/screens/AddIncomeScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { BudgetScreen } from './src/screens/BudgetScreen';
 import { AddCategoryBudgetScreen } from './src/screens/AddCategoryBudgetScreen';
+import { CategorySelectorScreen } from './src/screens/CategorySelectorScreen';
+import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
+import { SharedAccountDetailsScreen } from './src/screens/SharedAccountDetailsScreen';
+import { CreateSharedAccountScreen } from './src/screens/CreateSharedAccountScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 import { initDatabase } from './src/database';
 import './src/i18n';
 import { useTranslation } from './src/hooks/useTranslation';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
-import { Home, Wallet, PlusCircle, Repeat, Settings, DollarSign, BarChart3 } from 'lucide-react-native';
-import { CategorySelectorScreen } from './src/screens/CategorySelectorScreen';
-import { AnalyticsScreen } from './src/screens/AnalyticsScreen';
+import { AuthProvider, useAuthContext } from './src/contexts/AuthContext';
+import { Home, Wallet, PlusCircle, Settings, BarChart3 } from 'lucide-react-native';
+import tw from './src/lib/tailwind';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -94,6 +100,16 @@ function TabNavigator() {
 function AppNavigator() {
   const { t } = useTranslation();
   const { isDark, colors } = useTheme();
+  const { user, loading } = useAuthContext();
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={tw`flex-1 items-center justify-center ${isDark ? 'bg-black' : 'bg-white'}`}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator
@@ -105,32 +121,56 @@ function AppNavigator() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-      <Stack.Screen
-        name="AddIncome"
-        component={AddIncomeScreen}
-        options={{
-          title: t('revenue.addRevenue'),
-          presentation: 'modal',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="CategorySelector"
-        component={CategorySelectorScreen}
-        options={{
-          presentation: 'modal',
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="AddCategoryBudget"
-        component={AddCategoryBudgetScreen}
-        options={{
-          presentation: 'modal',
-          headerShown: false,
-        }}
-      />
+      {/* Si l'utilisateur n'est pas connecté, montrer l'écran de login */}
+      {!user ? (
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+      ) : (
+        <>
+          <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
+          <Stack.Screen
+            name="AddIncome"
+            component={AddIncomeScreen}
+            options={{
+              title: t('revenue.addRevenue'),
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="CategorySelector"
+            component={CategorySelectorScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="AddCategoryBudget"
+            component={AddCategoryBudgetScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          {/* 🆕 Shared Account Screens */}
+          <Stack.Screen
+            name="SharedAccountDetails"
+            component={SharedAccountDetailsScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="CreateSharedAccount"
+            component={CreateSharedAccountScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+        </>
+      )}
     </Stack.Navigator>
   );
 }
@@ -161,7 +201,9 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -10,7 +10,10 @@
     "title": "Budget",
     "monthlyBudget": "Monthly Budget",
     "setBudget": "Set Budget",
-    "editBudget": "Edit"
+    "editBudget": "Edit",
+    "enterAmount": "Enter amount",
+    "whatIsBudget": "What is the budget?",
+    "budgetExplanation": "Your monthly budget represents the money available after paying your recurring expenses (rent, subscriptions, etc.). This is what you can spend freely this month."
   },
   "revenue": {
     "title": "Revenue",
@@ -27,7 +30,9 @@
     "incomeMonth": "Income this month",
     "selectSource": "Select a source",
     "incomeAdded": "Revenue added",
-    "cannotAddIncome": "Cannot add revenue"
+    "cannotAddIncome": "Cannot add revenue",
+    "deleteTitle": "Delete revenue",
+    "deleteConfirm": "Do you really want to delete"
   },
   "incomeSources": {
     "salary": "Salary",
@@ -36,7 +41,6 @@
     "gift": "Gift",
     "other": "Other"
   },
-
   "expense": {
     "amount": "Amount",
     "category": "Category",
@@ -119,9 +123,40 @@
     "export": "Export Data",
     "about": "About"
   },
+  "sharedAccounts": {
+    "title": "Shared Accounts",
+    "noAccounts": "No shared accounts.\nCreate one to manage shared expenses!",
+    "loading": "Loading...",
+    "createAccount": "Create shared account",
+    "accountName": "Account name",
+    "accountNamePlaceholder": "Bali Trip 2025",
+    "accountNameHint": "e.g. Bali Trip, Roommates, Marie & David...",
+    "createButton": "Create Account",
+    "newAccount": "New Account",
+    "nameYourAccount": "Name your shared account",
+    "creationInfo": "💡 You can invite members after creating the account. All members will be able to add expenses and manage the budget.",
+    "createSuccess": "Shared account created successfully!",
+    "createError": "Failed to create account",
+    "enterName": "Please enter an account name",
+    "members": "members",
+    "member": "member",
+    "details": {
+      "title": "Shared Account",
+      "availableBudget": "Available Budget",
+      "spent": "Spent",
+      "remaining": "Remaining",
+      "income": "Income",
+      "recurring": "Recurring",
+      "addExpense": "Add Expense",
+      "recentExpenses": "Recent Expenses",
+      "noExpenses": "No expenses yet"
+    }
+  },
   "error": "Error",
   "success": "Success",
   "cancel": "Cancel",
+  "delete": "Delete",
+  "understood": "Got it",
   "invalidAmount": "Please enter a valid amount",
   "selectCategory": "Select a category",
   "searchCategory": "Search categories...",
@@ -188,10 +223,10 @@
     "recurring": "Monthly recurring",
     "savingsRate": "Savings rate",
     "financialScore": "Financial Score",
-    "scoreExcellent": "Excellent! Keep it up 🎉",
-    "scoreGood": "Good job! You're on track 👍",
-    "scoreFair": "Fair, but can improve 💪",
-    "scoreNeedsWork": "Needs improvement 📈",
+    "scoreExcellent": "Excellent! Keep it up",
+    "scoreGood": "Good job! You're on track",
+    "scoreFair": "Fair, but can improve",
+    "scoreNeedsWork": "Needs improvement",
     "prediction": "End of year prediction",
     "predictionDesc": "At this pace, you'll have saved {{amount}} by year end ({{months}} months left)",
     "projected": "projected",
@@ -201,7 +236,6 @@
     "transactions": "transactions",
     "noData": "No data available",
     "yearProjection": "Year Projection",
-
     "projectionDesc": "Based on current trends, you could save {amount} by year end ({months} months left)"
   }
 }
