@@ -17,12 +17,13 @@ interface SharedAddExpenseScreenProps {
   route: {
     params: {
       accountId: string;
+      onExpenseAdded?: () => void;
     };
   };
 }
 
 export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseScreenProps) => {
-  const { accountId } = route.params;
+  const { accountId, onExpenseAdded } = route.params;
   const { addExpense } = useSharedExpenses(accountId);
   const { createRecurring } = useSharedRecurringExpenses(accountId);
   const { t } = useTranslation();
@@ -57,12 +58,6 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
           category,
           description: description || undefined,
         });
-        Alert.alert(t('success'), t('sharedAccounts.recurringAdded'), [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
       } else {
         // Créer une dépense unique
         await addExpense({
@@ -72,13 +67,17 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
           description: description || undefined,
           date: new Date().toISOString(),
         });
-        Alert.alert(t('success'), t('expenseAdded'), [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
       }
+
+      // ✅ Appeler le callback pour refresh
+      if (onExpenseAdded) {
+        onExpenseAdded();
+      }
+
+      // Navigation avec délai pour laisser le temps au real-time de se sync
+      setTimeout(() => {
+        navigation.goBack();
+      }, 300);
 
       setAmount('');
       setCategory('');
@@ -128,7 +127,7 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
             <View style={tw`px-6`}>
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
                 {/* Recurring Toggle */}
-                <Card style={tw`p-0 overflow-hidden mb-4`}>
+                {/* <Card style={tw`p-0 overflow-hidden mb-4`}>
                   <TouchableOpacity onPress={() => setIsRecurring(!isRecurring)} style={tw`px-4 py-4 flex-row items-center justify-between`}>
                     <View style={tw`flex-1`}>
                       <Text style={tw.style('text-base font-semibold mb-1', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('expense.recurring')}</Text>
@@ -139,7 +138,7 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
                       <View style={tw.style('w-6 h-6 rounded-full bg-white', isRecurring && 'ml-auto')} />
                     </View>
                   </TouchableOpacity>
-                </Card>
+                </Card> */}
 
                 {/* Category Selection Button */}
                 <Card style={tw`p-0 overflow-hidden mb-4`}>

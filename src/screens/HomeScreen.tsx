@@ -354,7 +354,7 @@ export const HomeScreen = () => {
                                     <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{expense.description}</Text>
                                   )}
                                 </View>
-                                <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(expense.amount)}</Text>
+                                <Text style={tw.style('text-base font-bold', `text-[${colors.primary}]`)}>{formatCurrency(expense.amount)}</Text>
                               </View>
                             </Card>
                           </Swipeable>

@@ -51,6 +51,7 @@
   },
   "addExpense": "Add",
   "categoryBudgets": "Category Budgets",
+  "loading": "Loading...",
   "categories": {
     "rent": "Rent",
     "food": "Food",
@@ -119,10 +120,72 @@
   },
   "settings": {
     "title": "Settings",
+    "colorPalette": "Color Palette",
+    "choosePalette": "Choose your preferred color palette",
+    "appearance": "Appearance",
     "language": "Language",
+    "data": "Data",
+    "devTools": "Developer Tools",
+    "account": "Account",
+    "about": "About",
     "export": "Export Data",
-    "about": "About"
+    "exportMessage": "This feature will be available soon",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "palettes": {
+      "nordic": {
+        "name": "Nordic",
+        "description": "Professional and elegant theme"
+      },
+      "mauve": {
+        "name": "Dusty Mauve",
+        "description": "Warm and cozy theme"
+      },
+      "sage": {
+        "name": "Sage",
+        "description": "Nature and growth"
+      },
+      "amber": {
+        "name": "Amber",
+        "description": "Premium and luxurious"
+      }
+    },
+    "paletteInfo": "Color palette changes the app's appearance with harmonious colors adapted to your style.",
+    "databaseStats": "Database Statistics",
+    "cleanupDuplicates": "Cleanup Duplicates",
+    "cleanupDuplicatesMessage": "Remove duplicate incomes",
+    "cleanupAuto": "Cleanup Auto Expenses",
+    "cleanupAutoMessage": "Remove automatically generated expenses",
+    "cleanupRecurring": "Cleanup Recurring",
+    "cleanupRecurringMessage": "Remove duplicate recurring expenses",
+    "cleanup": "Cleanup",
+    "duplicatesRemoved": "duplicates removed",
+    "autoExpensesRemoved": "auto expenses removed",
+    "recurringRemoved": "recurring removed",
+    "resetAll": "Reset All",
+    "resetAllMessage": "Delete all incomes and expenses",
+    "resetSuccess": "Data reset successfully",
+    "deleteEverything": "Delete Everything",
+    "deleteEverythingMessage": "Delete ALL data",
+    "deleteAll": "DELETE ALL",
+    "areYouSure": "Are you sure?",
+    "reallyDeleteEverything": "Really delete EVERYTHING?",
+    "yesDelete": "YES, DELETE",
+    "everythingDeleted": "Everything has been deleted",
+    "signOut": "Sign Out",
+    "signOutMessage": "Are you sure you want to sign out?",
+    "signOutError": "Failed to sign out",
+    "signingOut": "Signing out...",
+    "aboutMessage": "Luma - Version 1.0.0\nSimple and elegant budget management",
+    "incomes": "Incomes",
+    "expenses": "Expenses",
+    "recurring": "Recurring",
+    "categories": "Categories"
   },
+
   "sharedAccounts": {
     "title": "Shared Accounts",
     "noAccounts": "No shared accounts.\nCreate one to manage shared expenses!",

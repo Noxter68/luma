@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { X, Plus, Settings, User } from 'lucide-react-native';
+import { X, Plus, Settings, User, Info } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,26 +42,34 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
 
+  // ✅ Le hook useSharedBudget gère déjà le real-time via Supabase subscriptions
   const { budgetSummary, loading, expenses, incomes } = useSharedBudget(accountId);
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [showBudgetInfoModal, setShowBudgetInfoModal] = useState(false);
+
+  // ✅ Pour le premier chargement uniquement
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
 
-  // Refresh au focus de l'écran
+  // ✅ Refresh silencieux au focus (sans loader visible)
   useFocusEffect(
     useCallback(() => {
-      setRefreshKey((prev) => prev + 1);
+      // Refresh members silencieusement (pas besoin de loader)
       fetchMembers();
+      // Les dépenses/revenus se refresh automatiquement via real-time subscriptions
     }, [accountId])
   );
 
   useEffect(() => {
-    fetchMembers();
-    fetchCurrentUser();
-  }, [accountId, refreshKey]);
+    const init = async () => {
+      await Promise.all([fetchMembers(), fetchCurrentUser()]);
+      setInitialLoading(false);
+    };
+    init();
+  }, [accountId]);
 
   const fetchCurrentUser = async () => {
     const {
@@ -72,8 +80,7 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
 
   const fetchMembers = async () => {
     try {
-      setLoadingMembers(true);
-
+      // ✅ Pas de setLoadingMembers(true) pour éviter le flicker
       const { data: membersData, error: membersError } = await supabase.from('shared_account_members').select('id, user_id, role').eq('shared_account_id', accountId);
 
       if (membersError) throw membersError;
@@ -90,9 +97,9 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
       );
 
       setMembers(membersWithProfiles);
+      setLoadingMembers(false);
     } catch (error) {
       console.error('Error fetching members:', error);
-    } finally {
       setLoadingMembers(false);
     }
   };
@@ -176,7 +183,8 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
     return format(date, 'EEEE d MMMM', { locale: locale === 'fr' ? fr : enUS });
   };
 
-  if (loading) {
+  // ✅ Loader uniquement au tout premier chargement
+  if (initialLoading) {
     return (
       <View style={tw`flex-1 items-center justify-center ${isDark ? 'bg-black' : 'bg-white'}`}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -200,18 +208,23 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
               </TouchableOpacity>
             </View>
 
-            {/* Account Name - Plus petit */}
+            {/* Account Name */}
             <Text style={tw`text-white text-base font-bold mb-3`}>{accountName || t('sharedAccounts.details.title')}</Text>
 
-            {/* Budget Card - Simple et compact */}
-            <View style={tw`bg-white/10 rounded-2xl p-3 mb-3`}>
-              <Text style={tw`text-white/80 text-sm font-medium mb-2`}>{t('sharedAccounts.details.availableBudget')}</Text>
-              <Text style={tw`text-white text-3xl font-bold`}>{formatCurrency(budgetSummary.remainingBudget)}</Text>
+            {/* Budget Card - Style RevenueScreen */}
+            <View style={tw`items-center mt-6`}>
+              <View style={tw`flex-row items-center gap-2 mb-3`}>
+                <Text style={tw`text-white/80 text-base`}>{t('sharedAccounts.details.availableBudget')}</Text>
+                <TouchableOpacity onPress={() => setShowBudgetInfoModal(true)} style={tw`p-1`}>
+                  <Info size={16} color="white" opacity={0.7} strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+              <Text style={tw`text-6xl font-bold text-white`}>{formatCurrency(budgetSummary.remainingBudget)}</Text>
             </View>
 
             {/* Members sous la card */}
             {!loadingMembers && members.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-2 mb-3`}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-2 mb-6 mt-3`}>
                 {members.map((member) => (
                   <View key={member.id} style={tw`items-center`}>
                     <View style={tw`w-9 h-9 rounded-full items-center justify-center bg-white/20 mb-1`}>
@@ -229,7 +242,7 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
               </ScrollView>
             )}
 
-            {/* Boutons - Plus compacts */}
+            {/* Boutons - Style RevenueScreen */}
             <View style={tw`flex-row gap-2`}>
               <TouchableOpacity onPress={handleAddIncome} style={tw`flex-1 py-2.5 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center justify-center gap-1.5`}>
                 <Plus size={18} color="white" strokeWidth={2.5} />
@@ -249,7 +262,7 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-6 pb-6`}>
                 {/* Recent Activity */}
                 <View>
-                  {/* Recent Activity - Titre plus petit */}
+                  {/* Recent Activity - Titre */}
                   <Text style={tw.style('text-base font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('sharedAccounts.details.recentActivity')}</Text>
 
                   {Object.keys(groupedActivity).length === 0 ? (
@@ -279,11 +292,11 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
                                 <View
                                   key={`${item.type}-${item.id}`}
                                   style={tw.style(
-                                    'flex-row items-center py-2.5 ',
+                                    'flex-row items-center py-2.5',
                                     index !== dayActivities.length - 1 && `border-b ${isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`}`
                                   )}
                                 >
-                                  {/* Icon - Couleur neutre */}
+                                  {/* Icon - Taille réduite */}
                                   {IconComponent ? (
                                     <View style={tw.style('w-9 h-9 rounded-full items-center justify-center mr-2.5', `bg-[${colors.primary}]/20`)}>
                                       <IconComponent size={18} color={colors.primary} strokeWidth={2.5} />
@@ -307,7 +320,7 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
                                     </View>
                                   </View>
 
-                                  {/* Amount - Seul élément avec couleur */}
+                                  {/* Amount */}
                                   <Text style={tw.style('text-sm font-bold', isExpense ? 'text-red-500' : 'text-green-500')}>
                                     {isExpense ? '-' : '+'}
                                     {formatCurrency(item.amount)}
@@ -324,6 +337,35 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
               </LinearGradient>
             </View>
           </ScrollView>
+
+          <Modal visible={showBudgetInfoModal} transparent animationType="fade" onRequestClose={() => setShowBudgetInfoModal(false)}>
+            <TouchableOpacity activeOpacity={1} onPress={() => setShowBudgetInfoModal(false)} style={tw`flex-1 bg-black/60 items-center justify-center px-6`}>
+              <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={tw.style('w-full rounded-3xl p-6', isDark ? `bg-[${colors.dark.surface}]` : 'bg-white')}>
+                <View style={tw`flex-row items-start justify-between mb-4`}>
+                  <View style={tw`flex-1 pr-4`}>
+                    <Text style={tw.style('text-xl font-bold mb-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+                      {locale === 'fr' ? 'Budget partagé' : 'Shared Budget'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setShowBudgetInfoModal(false)}>
+                    <View style={tw.style('w-8 h-8 rounded-full items-center justify-center', isDark ? `bg-[${colors.dark.card}]` : `bg-[${colors.light.border}]`)}>
+                      <Text style={tw.style('text-xl font-medium', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>×</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={tw.style('text-base leading-relaxed', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                  {locale === 'fr'
+                    ? `Ce budget est spécifique au groupe "${
+                        accountName || 'partagé'
+                      }" et est séparé de votre budget personnel et privé.\n\nTous les membres du groupe peuvent ajouter des revenus et des dépenses qui affectent ce budget partagé uniquement.`
+                    : `This budget is specific to the "${
+                        accountName || 'shared'
+                      }" group and is separate from your personal and private budget.\n\nAll group members can add income and expenses that affect this shared budget only.`}
+                </Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </Modal>
         </SafeAreaView>
       </LinearGradient>
     </View>

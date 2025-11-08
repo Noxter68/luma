@@ -51,6 +51,7 @@
   },
   "addExpense": "Ajouter",
   "categoryBudgets": "Budgets par catégorie",
+  "loading": "Chargement...",
   "categories": {
     "rent": "Loyer",
     "food": "Alimentation",
@@ -119,10 +120,72 @@
   },
   "settings": {
     "title": "Paramètres",
+    "colorPalette": "Palette de couleurs",
+    "choosePalette": "Choisissez votre palette de couleurs préférée",
+    "appearance": "Apparence",
     "language": "Langue",
+    "data": "Données",
+    "devTools": "Outils développeur",
+    "account": "Compte",
+    "about": "À propos",
     "export": "Exporter les données",
-    "about": "À propos"
+    "exportMessage": "Cette fonctionnalité sera bientôt disponible",
+    "theme": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
+    "palettes": {
+      "nordic": {
+        "name": "Nordic",
+        "description": "Thème professionnel et élégant"
+      },
+      "mauve": {
+        "name": "Dusty Mauve",
+        "description": "Thème chaleureux et cosy"
+      },
+      "sage": {
+        "name": "Sage",
+        "description": "Nature et croissance"
+      },
+      "amber": {
+        "name": "Amber",
+        "description": "Premium et luxueux"
+      }
+    },
+    "paletteInfo": "La palette de couleurs change l'apparence de l'application avec des couleurs harmonieuses adaptées à votre style.",
+    "databaseStats": "Statistiques de la base",
+    "cleanupDuplicates": "Nettoyer les doublons",
+    "cleanupDuplicatesMessage": "Supprimer les revenus en double",
+    "cleanupAuto": "Nettoyer les dépenses auto",
+    "cleanupAutoMessage": "Supprimer les dépenses générées automatiquement",
+    "cleanupRecurring": "Nettoyer les récurrents",
+    "cleanupRecurringMessage": "Supprimer les dépenses récurrentes en double",
+    "cleanup": "Nettoyer",
+    "duplicatesRemoved": "doublons supprimés",
+    "autoExpensesRemoved": "dépenses auto supprimées",
+    "recurringRemoved": "récurrents supprimés",
+    "resetAll": "Tout réinitialiser",
+    "resetAllMessage": "Supprimer tous les revenus et dépenses",
+    "resetSuccess": "Données réinitialisées avec succès",
+    "deleteEverything": "Tout supprimer",
+    "deleteEverythingMessage": "Supprimer TOUTES les données",
+    "deleteAll": "TOUT SUPPRIMER",
+    "areYouSure": "Êtes-vous sûr ?",
+    "reallyDeleteEverything": "Vraiment tout supprimer ?",
+    "yesDelete": "OUI, SUPPRIMER",
+    "everythingDeleted": "Tout a été supprimé",
+    "signOut": "Déconnexion",
+    "signOutMessage": "Voulez-vous vraiment vous déconnecter ?",
+    "signOutError": "Impossible de se déconnecter",
+    "signingOut": "Déconnexion...",
+    "aboutMessage": "Luma - Version 1.0.0\nGestion de budget simple et élégante",
+    "incomes": "Revenus",
+    "expenses": "Dépenses",
+    "recurring": "Récurrents",
+    "categories": "Catégories"
   },
+
   "sharedAccounts": {
     "title": "Comptes Partagés",
     "noAccounts": "Aucun compte partagé.\nCréez-en un pour gérer vos dépenses communes !",
@@ -305,5 +368,19 @@
     "noData": "Aucune donnée disponible",
     "yearProjection": "Projection Annuelle",
     "projectionDesc": "Sur cette tendance, vous pourriez économiser {amount} d'ici fin d'année ({months} mois restants)"
+  },
+  "commonTranslations": {
+    "cancel": {
+      "fr": "Annuler",
+      "en": "Cancel"
+    },
+    "success": {
+      "fr": "Succès",
+      "en": "Success"
+    },
+    "error": {
+      "fr": "Erreur",
+      "en": "Error"
+    }
   }
 }

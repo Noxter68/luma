@@ -80,7 +80,7 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
+          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`} showsVerticalScrollIndicator={false}>
             {/* Header Section */}
             <View style={tw`px-6 pt-4 pb-6`}>
               <View style={tw`items-center`}>

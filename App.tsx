@@ -29,6 +29,7 @@ import { SharedAccountSettingsScreen } from './src/screens/SharedAccountSettings
 import { SharedAddExpenseScreen } from './src/screens/SharedAddExpenseScreen';
 import { SharedAddIncomeScreen } from './src/screens/SharedAddIncomeScreen';
 import { SharedManageBudgetScreen } from './src/screens/SharedManageBudgetScreen';
+import { ThemePaletteScreen } from './src/screens/ThemePaletteScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -151,6 +152,14 @@ function AppNavigator() {
           <Stack.Screen
             name="AddCategoryBudget"
             component={AddCategoryBudgetScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="ThemePalette"
+            component={ThemePaletteScreen}
             options={{
               presentation: 'modal',
               headerShown: false,

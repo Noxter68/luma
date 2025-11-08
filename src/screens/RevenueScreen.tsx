@@ -5,7 +5,7 @@ import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { Plus, Trash2, Info, Users, ChevronRight } from 'lucide-react-native';
+import { Plus, Trash2, Info, Users, ChevronRight, Edit2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,15 +22,21 @@ export const RevenueScreen = ({ navigation }: any) => {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // 🆕 Shared Accounts
+  // Shared Accounts
   const { accounts, loading: accountsLoading } = useSharedAccount();
 
   // Animation pour le toggle
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    refresh();
+    const initializeScreen = async () => {
+      await refresh();
+      setIsInitialLoading(false);
+    };
+
+    initializeScreen();
   }, []);
 
   useEffect(() => {
@@ -122,7 +128,6 @@ export const RevenueScreen = ({ navigation }: any) => {
     });
   };
 
-  // 🆕 Navigation vers shared account
   const handleOpenSharedAccount = (accountId: string) => {
     navigation.navigate('SharedAccountDetails', { accountId });
   };
@@ -130,6 +135,22 @@ export const RevenueScreen = ({ navigation }: any) => {
   const handleCreateSharedAccount = () => {
     navigation.navigate('CreateSharedAccount');
   };
+
+  // Afficher le loader tant que les données ne sont pas toutes chargées
+  if (isInitialLoading || accountsLoading) {
+    return (
+      <View style={tw`flex-1`}>
+        <LinearGradient colors={headerGradient} style={tw`flex-1`}>
+          <SafeAreaView edges={['top']} style={tw`flex-1 items-center justify-center`}>
+            <View style={tw`bg-white/20 rounded-full p-4`}>
+              <View style={tw`w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin`} />
+            </View>
+            <Text style={tw`text-white/80 text-base mt-4`}>{t('loading')}</Text>
+          </SafeAreaView>
+        </LinearGradient>
+      </View>
+    );
+  }
 
   return (
     <View style={tw`flex-1`}>
@@ -166,20 +187,20 @@ export const RevenueScreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Revenue Tab */}
-              {selectedTab === 'revenue' && (
+              {/* Header content based on selected tab */}
+              {selectedTab === 'revenue' ? (
                 <View style={tw`items-center`}>
                   <Text style={tw`text-white/80 text-base mb-3`}>{t('revenue.totalRevenue')}</Text>
-                  <Text style={tw`text-6xl font-bold text-white mb-5`}>{formatCurrency(totalIncome)}</Text>
-                  <TouchableOpacity onPress={() => navigation.navigate('AddIncome')} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center gap-2`}>
-                    <Plus size={20} color="white" strokeWidth={2.5} />
-                    <Text style={tw`text-white text-base font-semibold`}>{t('revenue.addRevenue')}</Text>
+                  <Text style={tw`text-white text-6xl font-bold mb-5`}>{formatCurrency(totalIncome)}</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('AddIncome')}
+                    style={tw`py-2.5 px-6 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center justify-center gap-1.5`}
+                  >
+                    <Plus size={18} color="white" strokeWidth={2.5} />
+                    <Text style={tw`text-white text-sm font-semibold`}>{t('revenue.addRevenue')}</Text>
                   </TouchableOpacity>
                 </View>
-              )}
-
-              {/* Budget Tab */}
-              {selectedTab === 'budget' && (
+              ) : (
                 <View style={tw`items-center`}>
                   {!isEditingBudget ? (
                     <>
@@ -190,8 +211,9 @@ export const RevenueScreen = ({ navigation }: any) => {
                         </TouchableOpacity>
                       </View>
                       <Text style={tw`text-6xl font-bold text-white mb-5`}>{formatCurrency(budgetAmountValue)}</Text>
-                      <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`px-8 py-3 rounded-xl bg-white/20 border-2 border-white/40`}>
-                        <Text style={tw`text-white text-base font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
+                      <TouchableOpacity onPress={() => setIsEditingBudget(true)} style={tw`py-2.5 px-6 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center justify-center gap-1.5`}>
+                        <Edit2 size={18} color="white" strokeWidth={2.5} />
+                        <Text style={tw`text-white text-sm font-semibold`}>{budget ? t('budget.editBudget') : t('budget.setBudget')}</Text>
                       </TouchableOpacity>
                     </>
                   ) : (
@@ -202,7 +224,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                         onChangeText={setBudgetAmount}
                         placeholder="0.00"
                         keyboardType="decimal-pad"
-                        style={tw`text-6xl font-bold text-white text-center py-2 border-b-2 border-white/30 mb-5`}
+                        style={tw`text-6xl font-bold text-white text-center py-4 border-b-2 border-white/30 mb-5 min-h-28`}
                         placeholderTextColor="rgba(255,255,255,0.3)"
                         autoFocus
                       />
@@ -240,27 +262,27 @@ export const RevenueScreen = ({ navigation }: any) => {
                         return (
                           <Card key={income.id} style={tw`mb-3`}>
                             <View style={tw`flex-row items-center`}>
-                              <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
-                                {IconComponent && <IconComponent size={20} color={colors.primary} strokeWidth={2} />}
-                              </View>
-                              <View style={tw`flex-1`}>
-                                <View style={tw`flex-row items-center gap-1`}>
-                                  <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
-                                    {getIncomeSourceLabel(income.source)}
-                                  </Text>
-                                  {income.isRecurring && (
-                                    <View style={tw.style('rounded-xl px-1.5 py-0.5', `bg-[${colors.primary}]/20`)}>
-                                      <Text style={tw.style('text-xs font-semibold', `text-[${colors.primary}]`)}>↻</Text>
-                                    </View>
-                                  )}
+                              {IconComponent && (
+                                <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                                  <IconComponent size={20} color={colors.primary} strokeWidth={2} />
                                 </View>
+                              )}
+
+                              <View style={tw`flex-1`}>
+                                <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+                                  {income.description || getIncomeSourceLabel(income.source)}
+                                </Text>
                                 {income.description && (
-                                  <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{income.description}</Text>
+                                  <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{getIncomeSourceLabel(income.source)}</Text>
                                 )}
                               </View>
-                              <Text style={tw.style('text-md font-bold mr-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(income.amount)}</Text>
-                              <TouchableOpacity onPress={() => handleDeleteIncome(income.id, income.description || '')} style={tw`p-1`}>
-                                <Trash2 size={18} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
+
+                              <View style={tw`items-end mr-3`}>
+                                <Text style={tw.style('text-lg font-bold', `text-[${colors.primary}]`)}>{formatCurrency(income.amount)}</Text>
+                              </View>
+
+                              <TouchableOpacity onPress={() => handleDeleteIncome(income.id, income.description || getIncomeSourceLabel(income.source))}>
+                                <Trash2 size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
                               </TouchableOpacity>
                             </View>
                           </Card>
@@ -268,15 +290,11 @@ export const RevenueScreen = ({ navigation }: any) => {
                       })
                     )}
 
-                    {/* 🆕 Shared Accounts Section */}
+                    {/* Shared Accounts Section */}
                     <View style={tw`mt-6`}>
                       <Text style={tw.style('text-xl font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('sharedAccounts.title')}</Text>
 
-                      {accountsLoading ? (
-                        <Card>
-                          <Text style={tw.style('text-base text-center py-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('sharedAccounts.loading')}</Text>
-                        </Card>
-                      ) : accounts.length === 0 ? (
+                      {accounts.length === 0 ? (
                         <Card>
                           <Text style={tw.style('text-base text-center py-8', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('sharedAccounts.noAccounts')}</Text>
                         </Card>
@@ -284,12 +302,10 @@ export const RevenueScreen = ({ navigation }: any) => {
                         accounts.map((account) => (
                           <Card key={account.id} style={tw`mb-3`}>
                             <TouchableOpacity onPress={() => handleOpenSharedAccount(account.id)} style={tw`flex-row items-center`}>
-                              {/* Icon avec emoji/users */}
                               <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
                                 <Users size={20} color={colors.primary} strokeWidth={2} />
                               </View>
 
-                              {/* Account Info */}
                               <View style={tw`flex-1`}>
                                 <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{account.name}</Text>
                                 <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
@@ -297,7 +313,6 @@ export const RevenueScreen = ({ navigation }: any) => {
                                 </Text>
                               </View>
 
-                              {/* Arrow */}
                               <ChevronRight size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
                             </TouchableOpacity>
                           </Card>
@@ -342,26 +357,30 @@ export const RevenueScreen = ({ navigation }: any) => {
                         </Text>
                       </View>
                     ) : (
-                      <View>
-                        {Object.keys(groupedCategories).map((groupKey) => {
+                      <>
+                        {Object.keys(CATEGORY_GROUPS).map((groupKey) => {
                           const categoriesInGroup = groupedCategories[groupKey];
+                          if (!categoriesInGroup || categoriesInGroup.length === 0) return null;
 
                           return (
-                            <View key={groupKey} style={tw`mb-4`}>
-                              {/* Group Header */}
-                              <Text style={tw.style('text-xs font-semibold uppercase tracking-wider mb-2 px-1', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
-                                {t((CATEGORY_GROUPS.find((g) => g.id === groupKey) || CATEGORY_GROUPS[0]).translationKey)}
+                            <View key={groupKey} style={tw`mb-5`}>
+                              <Text style={tw.style('text-sm font-semibold mb-2 px-1', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                                {t(`categoryGroups.${groupKey}`)}
                               </Text>
-
-                              {/* Categories in this group */}
                               {categoriesInGroup.map((catBudget) => (
-                                <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onPress={() => handleEditCategory(catBudget)} />
+                                <CategoryBudgetCard key={catBudget.id} categoryBudget={catBudget} onEdit={() => handleEditCategory(catBudget)} />
                               ))}
                             </View>
                           );
                         })}
-                      </View>
+                      </>
                     )}
+
+                    {/* Info Button */}
+                    <TouchableOpacity onPress={() => setShowInfoModal(true)} style={tw`flex-row items-center justify-center gap-2 mt-6`}>
+                      <Info size={18} color={isDark ? colors.dark.textSecondary : colors.light.textSecondary} strokeWidth={2} />
+                      <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.howItWorks')}</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </LinearGradient>
@@ -372,13 +391,21 @@ export const RevenueScreen = ({ navigation }: any) => {
 
       {/* Info Modal */}
       <Modal visible={showInfoModal} transparent animationType="fade" onRequestClose={() => setShowInfoModal(false)}>
-        <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/50 justify-center items-center px-6`} activeOpacity={1}>
-          <TouchableOpacity activeOpacity={1} style={tw.style('rounded-2xl p-6 max-w-sm w-full', isDark ? `bg-[${colors.dark.card}]` : 'bg-white')}>
-            <Text style={tw.style('text-lg font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budget.whatIsBudget')}</Text>
-            <Text style={tw.style('text-base leading-relaxed mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.budgetExplanation')}</Text>
-            <TouchableOpacity onPress={() => setShowInfoModal(false)} style={tw.style('py-3 rounded-xl items-center', `bg-[${colors.primary}]`)}>
-              <Text style={tw`text-white text-base font-semibold`}>{t('understood')}</Text>
-            </TouchableOpacity>
+        <TouchableOpacity activeOpacity={1} onPress={() => setShowInfoModal(false)} style={tw`flex-1 bg-black/60 items-center justify-center px-6`}>
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()} style={tw.style('w-full rounded-3xl p-6', isDark ? `bg-[${colors.dark.surface}]` : 'bg-white')}>
+            <View style={tw`flex-row items-start justify-between mb-4`}>
+              <View style={tw`flex-1 pr-4`}>
+                <Text style={tw.style('text-xl font-bold mb-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('budget.howItWorks')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowInfoModal(false)}>
+                <View style={tw.style('w-8 h-8 rounded-full items-center justify-center', isDark ? `bg-[${colors.dark.card}]` : `bg-[${colors.light.border}]`)}>
+                  <Text style={tw.style('text-xl font-medium', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>×</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={tw.style('text-base leading-relaxed mb-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.explanation1')}</Text>
+            <Text style={tw.style('text-base leading-relaxed', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('budget.explanation2')}</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
