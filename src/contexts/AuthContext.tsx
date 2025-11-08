@@ -13,6 +13,7 @@ interface AuthContextType {
   error: string | null;
   signInWithApple: () => Promise<any>;
   signOut: () => Promise<void>;
+  signInDev?: () => Promise<void>;
   isAuthenticated: boolean;
 }
 

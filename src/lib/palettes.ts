@@ -1,6 +1,6 @@
 // src/lib/palettes.ts
 
-export type PaletteType = 'nordic' | 'mauve' | 'sage' | 'amber';
+export type PaletteType = 'nordic' | 'mauve' | 'sage' | 'amber' | 'aurora';
 
 export interface PaletteColors {
   // Light mode
@@ -202,6 +202,45 @@ export const PALETTES: Record<PaletteType, PaletteColors> = {
         header: ['#1C1C1E', '#2C2C2E', '#3A3A3C', '#48484A'],
         primary: ['#2C2C2E', '#3A3A3C', '#48484A'],
         secondary: ['#48484A', '#5A5A5C', '#6E6E73'],
+      },
+    },
+  },
+
+  aurora: {
+    light: {
+      bg: '#FAF8F5', // Fond crème doux
+      surface: '#FFFFFF',
+      card: '#FFFFFF',
+      border: '#EDE8E3',
+      textPrimary: '#3D3B4A',
+      textSecondary: '#6B628E',
+      textTertiary: '#9B91B8',
+    },
+    dark: {
+      bg: '#1A1825',
+      surface: '#252132',
+      card: '#2F2A3E',
+      border: '#3D3B4A',
+      textPrimary: '#FAF8F5',
+      textSecondary: '#C5BFE0',
+      textTertiary: '#9B91B8',
+    },
+    primary: '#7B6FD9', // Violet principal
+    primaryLight: '#9B91E8',
+    primaryDark: '#6356B8',
+    secondary: '#5B8FE8', // Bleu doux
+    accent: '#B8A8E8',
+    gradients: {
+      light: {
+        // Effet brillance violet → bleu
+        header: ['#9B91E8', '#8A8BE8', '#7985E8', '#687FE8', '#5B8FE8'],
+        primary: ['#9B91E8', '#8792E8', '#7293E8'],
+        secondary: ['#7B6FD9', '#7D7FE3', '#7F8FED'],
+      },
+      dark: {
+        header: ['#1A1825', '#221F34', '#2A2643', '#322D52', '#3A3461'],
+        primary: ['#252132', '#2F2A3E', '#3A3552'],
+        secondary: ['#2F2A3E', '#3A3552', '#453F66'],
       },
     },
   },

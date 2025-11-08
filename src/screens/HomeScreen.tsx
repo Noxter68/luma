@@ -274,7 +274,7 @@ export const HomeScreen = () => {
 
               {/* Animated Gauge Container */}
               <Animated.View style={{ opacity: fadeAnim }}>
-                <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={totalIncome} mode={gaugeView} />
+                <BudgetGauge budget={budgetAmount} spent={totalSpent} recurring={totalRecurring} income={400} mode={gaugeView} />
               </Animated.View>
 
               {/* Stats Row with Fade Animation */}

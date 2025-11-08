@@ -5,7 +5,7 @@ import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check, X, Snowflake, Sparkles, Sprout, Gem } from 'lucide-react-native';
+import { Check, X, Snowflake, Sparkles, Sprout, Gem, Waves } from 'lucide-react-native';
 import { PaletteType } from '../lib/palettes';
 
 interface ThemePaletteScreenProps {
@@ -13,6 +13,12 @@ interface ThemePaletteScreenProps {
 }
 
 const PALETTES = [
+  ,
+  {
+    id: 'aurora' as const,
+    icon: Waves,
+    colors: ['#9B91E8', '#7B6FD9', '#5B8FE8'],
+  },
   {
     id: 'nordic' as const,
     icon: Snowflake,

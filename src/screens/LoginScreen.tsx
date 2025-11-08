@@ -16,7 +16,7 @@ interface LoginScreenProps {
 export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
-  const { signInWithApple, loading } = useAuth();
+  const { signInWithApple, signInDev, loading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
@@ -25,9 +25,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     try {
       setIsSigningIn(true);
       await signInWithApple();
-      // Navigation sera gérée automatiquement par le AuthProvider
     } catch (error: any) {
-      // Ne pas afficher d'erreur si l'utilisateur a annulé
       if (error.code !== 'ERR_CANCELED') {
         Alert.alert(locale === 'fr' ? 'Erreur' : 'Error', locale === 'fr' ? 'Impossible de se connecter avec Apple. Veuillez réessayer.' : 'Failed to sign in with Apple. Please try again.');
       }
@@ -36,20 +34,17 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     }
   };
 
-  const handleSkip = () => {
-    // Pour le développement, simuler une authentification locale
-    // en créant une fausse session dans le AuthContext
-    Alert.alert('Dev Mode', 'Skip authentication? This will create a fake local session.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Skip',
-        onPress: () => {
-          // La navigation sera gérée automatiquement par le AuthProvider
-          // Une fois qu'un user est défini
-          console.log('⚠️ Skipping auth in dev mode - implement fake session if needed');
-        },
-      },
-    ]);
+  const handleSkip = async () => {
+    if (!signInDev) return;
+
+    try {
+      console.log('🔄 Attempting dev sign in...');
+      await signInDev();
+      console.log('✅ Dev sign in completed');
+    } catch (error) {
+      console.error('❌ Error in dev sign in:', error);
+      Alert.alert('Dev Error', 'Failed to skip authentication. Check console for details.');
+    }
   };
 
   return (
@@ -77,16 +72,16 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
               <TouchableOpacity
                 onPress={handleAppleSignIn}
                 disabled={loading || isSigningIn}
-                style={tw.style('w-full py-4 rounded-xl items-center justify-center mb-4', loading || isSigningIn ? 'opacity-50' : '', `bg-white`)}
+                style={tw.style('w-full py-4 rounded-xl items-center justify-center mb-4', loading || isSigningIn ? 'opacity-50' : '', 'bg-white')}
               >
                 <Text style={tw`text-black text-base font-semibold`}>{loading || isSigningIn ? '...' : locale === 'fr' ? 'Se connecter avec Apple' : 'Sign in with Apple'}</Text>
               </TouchableOpacity>
             )}
 
             {/* Bouton Skip (seulement en dev) */}
-            {__DEV__ && (
-              <TouchableOpacity onPress={handleSkip} style={tw`w-full py-3 rounded-xl items-center`}>
-                <Text style={tw`text-white/60 text-sm`}>{locale === 'fr' ? 'Passer (dev)' : 'Skip (dev)'}</Text>
+            {__DEV__ && signInDev && (
+              <TouchableOpacity onPress={handleSkip} disabled={loading} style={tw.style('w-full py-3 rounded-xl items-center', loading && 'opacity-50')}>
+                <Text style={tw`text-white/60 text-sm`}>{loading ? '...' : locale === 'fr' ? 'Passer (dev)' : 'Skip (dev)'}</Text>
               </TouchableOpacity>
             )}
 

@@ -151,6 +151,10 @@
       "amber": {
         "name": "Amber",
         "description": "Premium and luxurious"
+      },
+      "aurora": {
+        "name": "Aurora",
+        "description": "Dreamy and soothing"
       }
     },
     "paletteInfo": "Color palette changes the app's appearance with harmonious colors adapted to your style.",
