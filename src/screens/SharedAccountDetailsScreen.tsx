@@ -1,21 +1,27 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
-import { X, Plus, Settings, HandCoins, RefreshCcw } from 'lucide-react-native';
+import { X, Plus, Settings, User } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPaletteGradient } from '../lib/palettes';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSharedBudget } from '../hooks/useSharedBudget';
 import { supabase } from '../lib/supabase';
+import { getCategoryById } from '../utils/categories';
+import { getIncomeSourceById } from '../utils/incomeSources';
+import { format } from 'date-fns';
+import { fr, enUS } from 'date-fns/locale';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface SharedAccountDetailsScreenProps {
   navigation: any;
   route: {
     params: {
       accountId: string;
+      accountName?: string;
     };
   };
 }
@@ -32,19 +38,37 @@ interface MemberWithProfile {
 }
 
 export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountDetailsScreenProps) => {
-  const { accountId } = route.params;
+  const { accountId, accountName } = route.params;
   const { t, locale } = useTranslation();
   const { isDark, colors, palette } = useTheme();
 
-  const { budgetSummary, loading, budgetStatus, expenses } = useSharedBudget(accountId);
+  const { budgetSummary, loading, expenses, incomes } = useSharedBudget(accountId);
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const headerGradient = getPaletteGradient(palette, isDark, 'header');
 
+  // Refresh au focus de l'écran
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshKey((prev) => prev + 1);
+      fetchMembers();
+    }, [accountId])
+  );
+
   useEffect(() => {
     fetchMembers();
-  }, [accountId]);
+    fetchCurrentUser();
+  }, [accountId, refreshKey]);
+
+  const fetchCurrentUser = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchMembers = async () => {
     try {
@@ -82,8 +106,23 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
     }).format(amount);
   };
 
+  const getMemberName = (userId: string) => {
+    const member = members.find((m) => m.user_id === userId);
+    if (!member?.profile) return t('sharedAccounts.settings.unknownUser');
+
+    if (userId === currentUserId) {
+      return t('sharedAccounts.settings.you');
+    }
+
+    return member.profile.full_name?.split(' ')[0] || member.profile.email?.split('@')[0] || t('sharedAccounts.settings.unknownUser');
+  };
+
   const handleAddExpense = () => {
     navigation.navigate('SharedAddExpense', { accountId });
+  };
+
+  const handleAddIncome = () => {
+    navigation.navigate('SharedAddIncome', { accountId });
   };
 
   const handleSettings = () => {
@@ -104,6 +143,39 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
     return '?';
   };
 
+  // Grouper et trier l'activité récente par jour
+  const groupedActivity = useMemo(() => {
+    const combined = [...expenses.map((e) => ({ ...e, type: 'expense' as const })), ...incomes.map((i) => ({ ...i, type: 'income' as const }))].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const grouped: Record<string, typeof combined> = {};
+    combined.forEach((item) => {
+      const dayKey = format(new Date(item.date), 'yyyy-MM-dd');
+      if (!grouped[dayKey]) {
+        grouped[dayKey] = [];
+      }
+      grouped[dayKey].push(item);
+    });
+
+    return grouped;
+  }, [expenses, incomes]);
+
+  const formatDayHeader = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+      return locale === 'fr' ? "Aujourd'hui" : 'Today';
+    }
+    if (format(date, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd')) {
+      return locale === 'fr' ? 'Hier' : 'Yesterday';
+    }
+    return format(date, 'EEEE d MMMM', { locale: locale === 'fr' ? fr : enUS });
+  };
+
   if (loading) {
     return (
       <View style={tw`flex-1 items-center justify-center ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -116,106 +188,137 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          {/* Header */}
-          <View style={tw`px-6 pt-4 pb-4 flex-row items-center justify-between`}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2 -ml-2`}>
-              <X size={24} color="white" strokeWidth={2} />
-            </TouchableOpacity>
-            <Text style={tw`text-white text-lg font-semibold flex-1 text-center`}>{t('sharedAccounts.details.title')}</Text>
-            <TouchableOpacity onPress={handleSettings} style={tw`p-2 -mr-2`}>
-              <Settings size={24} color="white" strokeWidth={2} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Budget Overview Section */}
-            <View style={tw`px-6 pb-6`}>
-              <View style={tw`items-center mb-4`}>
-                <Text style={tw`text-white/80 text-base mb-2`}>{t('sharedAccounts.details.availableBudget')}</Text>
-                <Text style={tw`text-5xl font-bold text-white mb-2`}>{formatCurrency(budgetSummary.availableBudget)}</Text>
-                <Text style={tw`text-white/60 text-sm`}>
-                  {t('sharedAccounts.details.spent')}: {formatCurrency(budgetSummary.totalExpenses)} • {t('sharedAccounts.details.remaining')}: {formatCurrency(budgetSummary.remainingBudget)}
-                </Text>
-              </View>
-
-              {/* Members Row - Horizontal Scrollable */}
-              {!loadingMembers && members.length > 0 && (
-                <View style={tw`mb-4`}>
-                  <Text style={tw`text-white/80 text-sm mb-2 font-medium`}>{t('sharedAccounts.settings.members')}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-3`}>
-                    {members.map((member) => (
-                      <View key={member.id} style={tw`items-center`}>
-                        {/* Avatar Circle */}
-                        <View style={tw`w-12 h-12 rounded-full items-center justify-center bg-white/20 mb-1`}>
-                          {member.profile?.avatar_url ? (
-                            <View style={tw`w-12 h-12 rounded-full bg-white/30`} />
-                          ) : (
-                            <Text style={tw`text-white text-base font-bold`}>{getInitials(member.profile?.full_name, member.profile?.email)}</Text>
-                          )}
-                        </View>
-                        {/* Name */}
-                        <Text style={tw`text-white/80 text-xs max-w-16 text-center`} numberOfLines={1}>
-                          {member.profile?.full_name?.split(' ')[0] || member.profile?.email?.split('@')[0] || 'User'}
-                        </Text>
-                      </View>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* Quick Stats Cards */}
-              <View style={tw`flex-row gap-3 mb-4`}>
-                <View style={tw`flex-1 bg-white/10 rounded-2xl p-4`}>
-                  <View style={tw`flex-row items-center gap-2 mb-2`}>
-                    <View style={tw`w-8 h-8 rounded-full bg-white/20 items-center justify-center`}>
-                      <HandCoins size={18} color="white" strokeWidth={2.5} />
-                    </View>
-                    <Text style={tw`text-white/80 text-sm font-bold`}>{t('sharedAccounts.details.income')}</Text>
-                  </View>
-                  <Text style={tw`text-white text-xl font-bold`}>{formatCurrency(budgetSummary.totalIncomes)}</Text>
-                </View>
-
-                <View style={tw`flex-1 bg-white/10 rounded-2xl p-4`}>
-                  <View style={tw`flex-row items-center gap-2 mb-2`}>
-                    <View style={tw`w-8 h-8 rounded-full bg-white/20 items-center justify-center`}>
-                      <RefreshCcw size={18} color="white" strokeWidth={2.5} />
-                    </View>
-                    <Text style={tw`text-white/80 text-sm font-bold`}>{t('sharedAccounts.details.recurring')}</Text>
-                  </View>
-                  <Text style={tw`text-white text-xl font-bold`}>{formatCurrency(budgetSummary.totalRecurringExpenses)}</Text>
-                </View>
-              </View>
-
-              {/* Add Expense Button */}
-              <TouchableOpacity onPress={handleAddExpense} style={tw`bg-white rounded-2xl py-4 flex-row items-center justify-center gap-2`}>
-                <Plus size={22} color={colors.primary} strokeWidth={2.5} />
-                <Text style={tw.style('text-base font-semibold', `text-[${colors.primary}]`)}>{t('sharedAccounts.details.addExpense')}</Text>
+          {/* Header Compact */}
+          <View style={tw`px-6 pt-2 pb-4`}>
+            {/* Top Bar */}
+            <View style={tw`flex-row items-center justify-between mb-3`}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2 -ml-2`}>
+                <X size={24} color="white" strokeWidth={2.5} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleSettings} style={tw`p-2 -mr-2`}>
+                <Settings size={24} color="white" strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
 
-            {/* Content Section */}
-            <View style={tw`px-6`}>
-              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
-                {/* Recent Expenses */}
-                <View style={tw`mb-4`}>
-                  <Text style={tw.style('text-base font-semibold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('sharedAccounts.details.recentExpenses')}</Text>
+            {/* Account Name - Plus petit */}
+            <Text style={tw`text-white text-base font-bold mb-3`}>{accountName || t('sharedAccounts.details.title')}</Text>
 
-                  {expenses.length === 0 ? (
-                    <Card>
-                      <Text style={tw.style('text-center py-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('sharedAccounts.details.noExpenses')}</Text>
+            {/* Budget Card - Simple et compact */}
+            <View style={tw`bg-white/10 rounded-2xl p-3 mb-3`}>
+              <Text style={tw`text-white/80 text-sm font-medium mb-2`}>{t('sharedAccounts.details.availableBudget')}</Text>
+              <Text style={tw`text-white text-3xl font-bold`}>{formatCurrency(budgetSummary.remainingBudget)}</Text>
+            </View>
+
+            {/* Members sous la card */}
+            {!loadingMembers && members.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-2 mb-3`}>
+                {members.map((member) => (
+                  <View key={member.id} style={tw`items-center`}>
+                    <View style={tw`w-9 h-9 rounded-full items-center justify-center bg-white/20 mb-1`}>
+                      {member.profile?.avatar_url ? (
+                        <View style={tw`w-9 h-9 rounded-full bg-white/30`} />
+                      ) : (
+                        <Text style={tw`text-white text-xs font-semibold`}>{getInitials(member.profile?.full_name, member.profile?.email)}</Text>
+                      )}
+                    </View>
+                    <Text style={tw`text-white/80 text-xs`} numberOfLines={1}>
+                      {member.profile?.full_name?.split(' ')[0] || member.profile?.email?.split('@')[0] || 'User'}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            {/* Boutons - Plus compacts */}
+            <View style={tw`flex-row gap-2`}>
+              <TouchableOpacity onPress={handleAddIncome} style={tw`flex-1 py-2.5 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center justify-center gap-1.5`}>
+                <Plus size={18} color="white" strokeWidth={2.5} />
+                <Text style={tw`text-white text-sm font-semibold`}>{locale === 'fr' ? 'Revenue' : 'Revenue'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleAddExpense} style={tw`flex-1 py-2.5 rounded-xl bg-white/20 border-2 border-white/40 flex-row items-center justify-center gap-1.5`}>
+                <Plus size={18} color="white" strokeWidth={2.5} />
+                <Text style={tw`text-white text-sm font-semibold`}>{locale === 'fr' ? 'Dépense' : 'Expense'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Content Section - Scrollable */}
+          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`} showsVerticalScrollIndicator={false}>
+            <View style={tw`px-6`}>
+              <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-6 pb-6`}>
+                {/* Recent Activity */}
+                <View>
+                  {/* Recent Activity - Titre plus petit */}
+                  <Text style={tw.style('text-base font-bold mb-3', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('sharedAccounts.details.recentActivity')}</Text>
+
+                  {Object.keys(groupedActivity).length === 0 ? (
+                    <Card style={tw`overflow-hidden`}>
+                      <Text style={tw.style('text-center py-4', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>
+                        {locale === 'fr' ? 'Aucune activité récente' : 'No recent activity'}
+                      </Text>
                     </Card>
                   ) : (
-                    expenses.slice(0, 5).map((expense, index) => (
-                      <Card key={expense.id} style={tw`${index !== 0 ? 'mt-3' : ''}`}>
-                        <View style={tw`flex-row items-center justify-between`}>
-                          <View style={tw`flex-1`}>
-                            <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{expense.category}</Text>
-                            {expense.description && <Text style={tw.style('text-sm mt-1', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{expense.description}</Text>}
-                          </View>
-                          <Text style={tw.style('text-lg font-bold', `text-[${colors.error}]`)}>-{formatCurrency(expense.amount)}</Text>
+                    Object.keys(groupedActivity).map((dayKey) => {
+                      const dayActivities = groupedActivity[dayKey];
+
+                      return (
+                        <View key={dayKey} style={tw`mb-4`}>
+                          {/* Day Header */}
+                          <Text style={tw.style('text-sm font-semibold mb-2 px-1', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{formatDayHeader(dayKey)}</Text>
+
+                          {/* Activities */}
+                          <Card style={tw`overflow-hidden`}>
+                            {dayActivities.map((item, index) => {
+                              const isExpense = item.type === 'expense';
+                              const categoryData = isExpense ? getCategoryById(item.category) : null;
+                              const incomeSourceData = !isExpense ? getIncomeSourceById(item.source) : null;
+                              const IconComponent = isExpense ? categoryData?.icon : incomeSourceData?.icon;
+
+                              return (
+                                <View
+                                  key={`${item.type}-${item.id}`}
+                                  style={tw.style(
+                                    'flex-row items-center py-2.5 ',
+                                    index !== dayActivities.length - 1 && `border-b ${isDark ? `border-[${colors.dark.border}]` : `border-[${colors.light.border}]`}`
+                                  )}
+                                >
+                                  {/* Icon - Couleur neutre */}
+                                  {IconComponent ? (
+                                    <View style={tw.style('w-9 h-9 rounded-full items-center justify-center mr-2.5', `bg-[${colors.primary}]/20`)}>
+                                      <IconComponent size={18} color={colors.primary} strokeWidth={2.5} />
+                                    </View>
+                                  ) : (
+                                    <View style={tw.style('w-9 h-9 rounded-full items-center justify-center mr-2.5', `bg-[${colors.primary}]/20`)}>
+                                      <Plus size={18} color={colors.primary} strokeWidth={2.5} />
+                                    </View>
+                                  )}
+
+                                  {/* Details */}
+                                  <View style={tw`flex-1`}>
+                                    <Text style={tw.style('text-sm font-semibold mb-0.5', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>
+                                      {isExpense ? t(`categories.${item.category}`) : item.source ? t(`sharedAccounts.incomeSources.${item.source}`) : item.description || t('revenue.title')}
+                                    </Text>
+                                    <View style={tw`flex-row items-center gap-1.5`}>
+                                      <User size={11} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
+                                      <Text style={tw.style('text-xs', `text-[${isDark ? colors.dark.textTertiary : colors.light.textTertiary}]`)}>
+                                        {getMemberName(item.created_by)} • {format(new Date(item.date), 'HH:mm')}
+                                      </Text>
+                                    </View>
+                                  </View>
+
+                                  {/* Amount - Seul élément avec couleur */}
+                                  <Text style={tw.style('text-sm font-bold', isExpense ? 'text-red-500' : 'text-green-500')}>
+                                    {isExpense ? '-' : '+'}
+                                    {formatCurrency(item.amount)}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                          </Card>
                         </View>
-                      </Card>
-                    ))
+                      );
+                    })
                   )}
                 </View>
               </LinearGradient>

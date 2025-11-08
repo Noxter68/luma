@@ -169,6 +169,7 @@ export interface Database {
           is_recurring: boolean;
           date: string;
           created_by: string;
+          contributed_by: string;
           created_at: string;
         };
         Insert: {
@@ -180,6 +181,7 @@ export interface Database {
           is_recurring?: boolean;
           date: string;
           created_by: string;
+          contributed_by?: string;
           created_at?: string;
         };
         Update: {
@@ -191,6 +193,7 @@ export interface Database {
           is_recurring?: boolean;
           date?: string;
           created_by?: string;
+          contributed_by?: string;
           created_at?: string;
         };
       };

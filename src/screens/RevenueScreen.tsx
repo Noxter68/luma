@@ -258,7 +258,7 @@ export const RevenueScreen = ({ navigation }: any) => {
                                   <Text style={tw.style('text-sm mt-0.5', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{income.description}</Text>
                                 )}
                               </View>
-                              <Text style={tw.style('text-lg font-bold mr-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(income.amount)}</Text>
+                              <Text style={tw.style('text-md font-bold mr-2', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{formatCurrency(income.amount)}</Text>
                               <TouchableOpacity onPress={() => handleDeleteIncome(income.id, income.description || '')} style={tw`p-1`}>
                                 <Trash2 size={18} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
                               </TouchableOpacity>

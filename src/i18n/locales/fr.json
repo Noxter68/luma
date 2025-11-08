@@ -140,6 +140,28 @@
     "enterName": "Veuillez entrer un nom pour le compte",
     "members": "membres",
     "member": "membre",
+    "addIncome": "Ajouter un revenu",
+    "addExpense": "Ajouter une dépense",
+    "addRecurring": "Ajouter une dépense récurrente",
+    "manageBudget": "Gérer le budget",
+    "income": "Revenu",
+    "incomeSource": "Source du revenu",
+    "incomeAdded": "Revenu ajouté avec succès",
+    "cannotAddIncome": "Impossible d'ajouter le revenu",
+    "incomeDescriptionPlaceholder": "Ex: Contribution Marie",
+    "recurringAdded": "Dépense récurrente ajoutée",
+    "cannotAddRecurring": "Impossible d'ajouter la dépense récurrente",
+    "updateRecurringError": "Échec de la mise à jour",
+    "deleteRecurringError": "Échec de la suppression",
+    "confirmDeleteRecurring": "Voulez-vous supprimer cette dépense récurrente ?",
+    "selectSource": "Sélectionner un type",
+    "incomeSources": {
+      "contribution": "Contribution",
+      "refund": "Remboursement",
+      "gift": "Cadeau",
+      "reimbursement": "Remboursement de frais",
+      "other": "Autre"
+    },
     "details": {
       "title": "Compte Partagé",
       "availableBudget": "Budget disponible",
@@ -149,10 +171,9 @@
       "recurring": "Récurrentes",
       "addExpense": "Ajouter une dépense",
       "recentExpenses": "Dépenses récentes",
-      "noExpenses": "Aucune dépense pour le moment"
-    },
-    "addExpense": {
-      "save": "Sauvegarder"
+      "noExpenses": "Aucune dépense pour le moment",
+      "recentActivity": "Activité récente",
+      "noActivity": "Aucune activité pour le moment"
     },
     "settings": {
       "title": "Paramètres du compte",
@@ -193,6 +214,11 @@
       "onlyOwnerDelete": "Seul le propriétaire peut supprimer ce compte"
     }
   },
+  "manage": "Gérer",
+  "amount": "Montant",
+  "description": "Description",
+  "category": "Catégorie",
+  "save": "Enregistrer",
   "error": "Erreur",
   "success": "Succès",
   "cancel": "Annuler",

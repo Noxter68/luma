@@ -27,6 +27,8 @@ import { Home, Wallet, PlusCircle, Settings, BarChart3 } from 'lucide-react-nati
 import tw from './src/lib/tailwind';
 import { SharedAccountSettingsScreen } from './src/screens/SharedAccountSettingsScreen';
 import { SharedAddExpenseScreen } from './src/screens/SharedAddExpenseScreen';
+import { SharedAddIncomeScreen } from './src/screens/SharedAddIncomeScreen';
+import { SharedManageBudgetScreen } from './src/screens/SharedManageBudgetScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -182,6 +184,22 @@ function AppNavigator() {
           <Stack.Screen
             name="SharedAddExpense"
             component={SharedAddExpenseScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SharedAddIncome"
+            component={SharedAddIncomeScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SharedManageBudget"
+            component={SharedManageBudgetScreen}
             options={{
               presentation: 'modal',
               headerShown: false,

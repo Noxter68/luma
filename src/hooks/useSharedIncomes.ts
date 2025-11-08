@@ -9,8 +9,9 @@ interface CreateIncomeParams {
   amount: number;
   source: string;
   description?: string;
-  isRecurring?: boolean;
   date: string;
+  contributedBy?: string; // ID du membre qui a contribué (optionnel)
+  isRecurring?: boolean; // Optionnel - non utilisé pour l'instant
 }
 
 /**
@@ -18,6 +19,7 @@ interface CreateIncomeParams {
  * - Récupère les revenus du mois en cours
  * - Permet d'ajouter/modifier/supprimer des revenus
  * - Sync temps réel entre les membres
+ * - Supporte contributed_by pour identifier qui a contribué
  */
 export const useSharedIncomes = (accountId: string, month?: string) => {
   const [incomes, setIncomes] = useState<SharedIncome[]>([]);
@@ -69,7 +71,6 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
 
       const startDate = `${currentMonth}-01`;
 
-      // ✅ Calcul du dernier jour du mois dynamiquement
       const [year, month] = currentMonth.split('-').map(Number);
       const lastDay = new Date(year, month, 0).getDate();
       const endDate = `${currentMonth}-${lastDay.toString().padStart(2, '0')}`;
@@ -94,7 +95,7 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
     }
   };
 
-  const addIncome = async (params: CreateIncomeParams) => {
+  const createIncome = async (params: CreateIncomeParams) => {
     try {
       const {
         data: { user },
@@ -102,6 +103,7 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
 
       if (!user) throw new Error('User not authenticated');
 
+      // Ne pas envoyer is_recurring car la colonne n'existe pas
       const { data, error: insertError } = await supabase
         .from('shared_incomes')
         .insert({
@@ -109,9 +111,9 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
           amount: params.amount,
           source: params.source,
           description: params.description || null,
-          is_recurring: params.isRecurring || false,
           date: params.date,
           created_by: user.id,
+          contributed_by: params.contributedBy || user.id,
         })
         .select()
         .single();
@@ -156,19 +158,14 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
     return incomes.reduce((sum, inc) => sum + inc.amount, 0);
   };
 
-  const getRecurringIncomes = () => {
-    return incomes.filter((inc) => inc.is_recurring);
-  };
-
   return {
     incomes,
     loading,
     error,
-    addIncome,
+    createIncome,
     updateIncome,
     deleteIncome,
     getTotalIncomes,
-    getRecurringIncomes,
     refresh: fetchIncomes,
   };
 };

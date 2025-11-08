@@ -306,7 +306,7 @@ export const SharedAccountSettingsScreen = ({ navigation, route }: SharedAccount
                           </View>
                         </View>
                       ) : (
-                        <Text style={tw.style('text-lg font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{accountName}</Text>
+                        <Text style={tw.style('text-md font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{accountName}</Text>
                       )}
                     </View>
 
