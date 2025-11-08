@@ -46,7 +46,6 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
           amount: parsedAmount,
           source: source as 'salary' | 'bonus' | 'freelance' | 'gift' | 'other',
           description: description || undefined,
-          isActive: true,
         });
       } else {
         // Créer une instance unique

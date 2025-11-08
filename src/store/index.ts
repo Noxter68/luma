@@ -65,6 +65,7 @@ interface BudgetStore {
   updateRecurringExpense: (expense: RecurringExpense) => void;
   deleteRecurringExpense: (id: string) => void;
   addIncome: (income: Omit<Income, 'id' | 'createdAt'>) => void;
+  addRecurringIncome: (income: Omit<Income, 'id' | 'month' | 'date' | 'isRecurring' | 'createdAt'>) => void;
   updateIncome: (income: Income) => void;
   deleteIncome: (id: string) => void;
   addCategoryBudget: (categoryBudget: Omit<CategoryBudget, 'id' | 'createdAt'>) => void;
@@ -252,6 +253,21 @@ export const useBudgetStore = create<BudgetStore>((set, get) => ({
     const income: Income = {
       ...incomeData,
       id: `income-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    dbCreateIncome(income);
+    get().loadIncomes();
+  },
+
+  addRecurringIncome: (incomeData) => {
+    const month = get().currentMonth;
+    const income: Income = {
+      ...incomeData,
+      id: `income-recurring-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      month,
+      isRecurring: true,
+      date: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
 
