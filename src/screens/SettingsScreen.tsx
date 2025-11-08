@@ -434,7 +434,7 @@ export const SettingsScreen = () => {
             <View>
               {/* Infos utilisateur */}
               <Text>Connecté en tant que</Text>
-              <Text>{user.fullName || user.email}</Text>
+              <Text>{user?.fullName || user?.email}</Text>
 
               {/* Bouton Sign Out */}
               <TouchableOpacity onPress={handleSignOut}>

@@ -11,12 +11,6 @@ interface User {
 
 /**
  * Hook pour gérer l'authentification Apple avec Supabase
- *
- * @returns {object} - Fonctions et état d'authentification
- * - user: Utilisateur connecté ou null
- * - loading: État de chargement
- * - signInWithApple: Fonction pour se connecter avec Apple
- * - signOut: Fonction pour se déconnecter
  */
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);

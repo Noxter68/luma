@@ -68,7 +68,11 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
       setLoading(true);
 
       const startDate = `${currentMonth}-01`;
-      const endDate = `${currentMonth}-31`;
+
+      // ✅ Calcul du dernier jour du mois dynamiquement
+      const [year, month] = currentMonth.split('-').map(Number);
+      const lastDay = new Date(year, month, 0).getDate();
+      const endDate = `${currentMonth}-${lastDay.toString().padStart(2, '0')}`;
 
       const { data, error: fetchError } = await supabase
         .from('shared_incomes')

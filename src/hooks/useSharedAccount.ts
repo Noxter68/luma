@@ -104,19 +104,17 @@ export const useSharedAccount = () => {
 
       if (!user) throw new Error('User not authenticated');
 
-      // Créer le shared account
-      const { data: accountData, error: accountError } = await supabase.from('shared_accounts').insert({ name }).select().single();
-
-      if (accountError) throw accountError;
-
-      // Ajouter l'utilisateur comme membre owner
-      const { error: memberError } = await supabase.from('shared_account_members').insert({
-        shared_account_id: accountData.id,
-        user_id: user.id,
-        role: 'owner',
+      // 🔧 Utiliser la fonction SQL helper au lieu de 2 requêtes séparées
+      const { data: accountId, error: createError } = await supabase.rpc('create_shared_account_with_owner', {
+        account_name: name,
       });
 
-      if (memberError) throw memberError;
+      if (createError) throw createError;
+
+      // Récupérer les données complètes du compte créé
+      const { data: accountData, error: fetchError } = await supabase.from('shared_accounts').select('*').eq('id', accountId).single();
+
+      if (fetchError) throw fetchError;
 
       await fetchSharedAccounts();
       return accountData;

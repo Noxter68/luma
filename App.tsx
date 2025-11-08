@@ -25,6 +25,8 @@ import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { AuthProvider, useAuthContext } from './src/contexts/AuthContext';
 import { Home, Wallet, PlusCircle, Settings, BarChart3 } from 'lucide-react-native';
 import tw from './src/lib/tailwind';
+import { SharedAccountSettingsScreen } from './src/screens/SharedAccountSettingsScreen';
+import { SharedAddExpenseScreen } from './src/screens/SharedAddExpenseScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -164,6 +166,22 @@ function AppNavigator() {
           <Stack.Screen
             name="CreateSharedAccount"
             component={CreateSharedAccountScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SharedAccountSettings"
+            component={SharedAccountSettingsScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="SharedAddExpense"
+            component={SharedAddExpenseScreen}
             options={{
               presentation: 'modal',
               headerShown: false,
