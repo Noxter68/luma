@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/supabase';
 
@@ -65,14 +65,14 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
     };
   }, [accountId, currentMonth]);
 
-  const fetchIncomes = async () => {
+  const fetchIncomes = useCallback(async () => {
     try {
       setLoading(true);
 
       const startDate = `${currentMonth}-01`;
 
-      const [year, month] = currentMonth.split('-').map(Number);
-      const lastDay = new Date(year, month, 0).getDate();
+      const [year, monthNum] = currentMonth.split('-').map(Number);
+      const lastDay = new Date(year, monthNum, 0).getDate();
       const endDate = `${currentMonth}-${lastDay.toString().padStart(2, '0')}`;
 
       const { data, error: fetchError } = await supabase
@@ -93,7 +93,7 @@ export const useSharedIncomes = (accountId: string, month?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId, currentMonth]);
 
   const createIncome = async (params: CreateIncomeParams) => {
     try {

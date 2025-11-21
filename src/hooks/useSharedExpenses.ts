@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/supabase';
 
@@ -65,15 +65,15 @@ export const useSharedExpenses = (accountId: string, month?: string) => {
     };
   }, [accountId, currentMonth]);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = useCallback(async () => {
     try {
       setLoading(true);
 
       const startDate = `${currentMonth}-01`;
 
       // ✅ Calcul du dernier jour du mois dynamiquement
-      const [year, month] = currentMonth.split('-').map(Number);
-      const lastDay = new Date(year, month, 0).getDate(); // Donne 28, 29, 30 ou 31
+      const [year, monthNum] = currentMonth.split('-').map(Number);
+      const lastDay = new Date(year, monthNum, 0).getDate(); // Donne 28, 29, 30 ou 31
       const endDate = `${currentMonth}-${lastDay.toString().padStart(2, '0')}`;
 
       const { data, error: fetchError } = await supabase
@@ -94,7 +94,7 @@ export const useSharedExpenses = (accountId: string, month?: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId, currentMonth]);
 
   const addExpense = async (params: CreateExpenseParams) => {
     try {

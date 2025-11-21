@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.davidplanchon.luma",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -39,6 +42,12 @@
           "appleTeamId": "XTNS27CALG"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "10227d88-da70-4905-9e9a-f932c9037c99"
+      }
+    },
+    "owner": "noxter68"
   }
 }

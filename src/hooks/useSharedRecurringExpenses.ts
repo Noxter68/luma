@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/supabase';
 
@@ -59,7 +59,7 @@ export const useSharedRecurringExpenses = (accountId: string) => {
     };
   }, [accountId]);
 
-  const fetchRecurringExpenses = async () => {
+  const fetchRecurringExpenses = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -80,7 +80,7 @@ export const useSharedRecurringExpenses = (accountId: string) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId]);
 
   const addRecurringExpense = async (params: CreateRecurringParams) => {
     try {

@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Animated, Modal } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
@@ -14,6 +14,7 @@ import { CategoryBudgetCard } from '../components/CategoryBudgetCard';
 import { getCategoryById, CATEGORY_GROUPS } from '../utils/categories';
 import { useSharedAccount } from '../hooks/useSharedAccount';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native';
 
 export const RevenueScreen = ({ navigation }: any) => {
   const { budget, incomes, refresh, setBudget, deleteIncome, totalIncome, sortedCategoryBudgets } = useBudgetStore();
@@ -27,7 +28,7 @@ export const RevenueScreen = ({ navigation }: any) => {
   const [hasShownSwipeHint, setHasShownSwipeHint] = useState(false);
 
   // Shared Accounts
-  const { accounts, loading: accountsLoading } = useSharedAccount();
+  const { accounts, loading: accountsLoading, refresh: refreshSharedAccounts } = useSharedAccount();
 
   // Animation pour le toggle
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -44,9 +45,19 @@ export const RevenueScreen = ({ navigation }: any) => {
     initializeScreen();
   }, []);
 
+  // Rafraîchir les comptes partagés quand l'écran regagne le focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshSharedAccounts();
+    }, [refreshSharedAccounts])
+  );
+
   useEffect(() => {
     if (budget && !isEditingBudget) {
-      setBudgetAmount(budget.amount.toString());
+      setBudgetAmount(budget.amount > 0 ? budget.amount.toString() : '');
+    } else if (isEditingBudget) {
+      // Vider le champ quand on commence à éditer pour éviter le "0" initial
+      setBudgetAmount('');
     }
   }, [budget, isEditingBudget]);
 
@@ -281,10 +292,10 @@ export const RevenueScreen = ({ navigation }: any) => {
                         <TextInput
                           value={budgetAmount}
                           onChangeText={setBudgetAmount}
-                          placeholder="0.00"
+                          placeholder={budget?.amount ? budget.amount.toString() : '0'}
                           keyboardType="decimal-pad"
                           style={tw`text-6xl font-bold text-white text-center py-4 border-b-2 border-white/30 mb-5 min-h-28`}
-                          placeholderTextColor="rgba(255,255,255,0.3)"
+                          placeholderTextColor="rgba(255,255,255,0.4)"
                           autoFocus
                         />
                         <View style={tw`flex-row gap-3`}>

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
@@ -78,8 +78,9 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Header Section */}
+          <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Header Section */}
             <View style={tw`px-6 pt-4 pb-6`}>
               <View style={tw`items-center`}>
                 <Text style={tw`text-white/80 text-base mb-3`}>{t('revenue.amount')}</Text>
@@ -183,7 +184,8 @@ export const AddIncomeScreen = ({ navigation }: AddIncomeScreenProps) => {
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>

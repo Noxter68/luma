@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, Switch, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
@@ -75,8 +75,9 @@ export const SharedAddIncomeScreen = ({ navigation, route }: SharedAddIncomeScre
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Header */}
+          <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Header */}
             <View style={tw`px-6 pt-4 pb-4 flex-row items-center justify-between`}>
               <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2 -ml-2`}>
                 <X size={24} color="white" strokeWidth={2} />
@@ -95,9 +96,11 @@ export const SharedAddIncomeScreen = ({ navigation, route }: SharedAddIncomeScre
                     onChangeText={setAmount}
                     placeholder="0.00"
                     keyboardType="decimal-pad"
-                    style={tw`text-6xl font-bold text-white text-center py-2 border-b-2 border-white/30`}
+                    style={tw`text-6xl font-bold text-white text-center py-2 border-b-2 border-white/30 min-h-20`}
                     placeholderTextColor="rgba(255,255,255,0.3)"
                     autoFocus
+                    multiline={false}
+                    textAlignVertical="center"
                   />
                 </View>
               </View>
@@ -184,7 +187,8 @@ export const SharedAddIncomeScreen = ({ navigation, route }: SharedAddIncomeScre
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>

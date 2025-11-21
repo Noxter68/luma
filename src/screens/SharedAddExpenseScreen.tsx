@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
@@ -100,8 +100,9 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Header Section */}
+          <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Header Section */}
             <View style={tw`px-6 pt-4 pb-6`}>
               <View style={tw`items-center`}>
                 <Text style={tw`text-white/80 text-base mb-3`}>{t('expense.amount')}</Text>
@@ -201,7 +202,8 @@ export const SharedAddExpenseScreen = ({ navigation, route }: SharedAddExpenseSc
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>

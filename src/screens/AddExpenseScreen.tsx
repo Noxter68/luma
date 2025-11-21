@@ -1,9 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import { useBudgetStore } from '../store';
 import { Card } from '../components/Card';
 import tw from '../lib/tailwind';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, List } from 'lucide-react-native';
 import { useTranslation } from '../hooks/useTranslation';
 import { useTheme } from '../contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -80,7 +80,8 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
     <View style={tw`flex-1`}>
       <LinearGradient colors={headerGradient} style={tw`flex-1 pt-6`}>
         <SafeAreaView edges={['top']} style={tw`flex-1`}>
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`} showsVerticalScrollIndicator={false}>
+          <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-6`} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             {/* Header Section */}
             <View style={tw`px-6 pt-4 pb-6`}>
               <View style={tw`items-center`}>
@@ -106,6 +107,23 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
             {/* Content Section */}
             <View style={tw`px-6`}>
               <LinearGradient colors={isDark ? [colors.dark.bg, colors.dark.surface, colors.dark.bg] : [colors.light.bg, colors.light.surface, colors.light.bg]} style={tw`rounded-3xl px-5 pt-5 pb-6`}>
+                {/* View Expenses Button */}
+                <Card style={tw`p-0 overflow-hidden mb-4`}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('ExpensesList')}
+                    style={tw`px-4 py-4 flex-row items-center`}
+                  >
+                    <View style={tw.style('w-10 h-10 rounded-full items-center justify-center mr-3', `bg-[${colors.primary}]/20`)}>
+                      <List size={20} color={colors.primary} strokeWidth={2} />
+                    </View>
+                    <View style={tw`flex-1`}>
+                      <Text style={tw.style('text-base font-semibold', `text-[${isDark ? colors.dark.textPrimary : colors.light.textPrimary}]`)}>{t('expenses.viewAll')}</Text>
+                      <Text style={tw.style('text-sm', `text-[${isDark ? colors.dark.textSecondary : colors.light.textSecondary}]`)}>{t('expenses.viewAllHint')}</Text>
+                    </View>
+                    <ChevronRight size={20} color={isDark ? colors.dark.textTertiary : colors.light.textTertiary} strokeWidth={2} />
+                  </TouchableOpacity>
+                </Card>
+
                 {/* Recurring Toggle */}
                 <Card style={tw`p-0 overflow-hidden mb-4`}>
                   <TouchableOpacity onPress={() => setIsRecurring(!isRecurring)} style={tw`px-4 py-4 flex-row items-center justify-between`}>
@@ -178,7 +196,8 @@ export const AddExpenseScreen = ({ navigation }: AddExpenseScreenProps) => {
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>

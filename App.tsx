@@ -1,11 +1,11 @@
 import 'react-native-gesture-handler';
-import { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useEffect, useRef } from 'react';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, TouchableOpacity, Animated, Dimensions, Text } from 'react-native';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { RevenueScreen } from './src/screens/RevenueScreen';
 import { AddExpenseScreen } from './src/screens/AddExpenseScreen';
@@ -30,9 +30,132 @@ import { SharedAddExpenseScreen } from './src/screens/SharedAddExpenseScreen';
 import { SharedAddIncomeScreen } from './src/screens/SharedAddIncomeScreen';
 import { SharedManageBudgetScreen } from './src/screens/SharedManageBudgetScreen';
 import { ThemePaletteScreen } from './src/screens/ThemePaletteScreen';
+import { ExpensesListScreen } from './src/screens/ExpensesListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Icônes pour chaque tab
+const TAB_ICONS: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth?: number }>> = {
+  Home,
+  Revenue: Wallet,
+  AddExpense: PlusCircle,
+  Analytics: BarChart3,
+  Settings,
+};
+
+function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { isDark, colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const TAB_COUNT = state.routes.length;
+  const TAB_WIDTH = SCREEN_WIDTH / TAB_COUNT;
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: state.index * TAB_WIDTH,
+      useNativeDriver: true,
+      damping: 15,
+      stiffness: 150,
+    }).start();
+  }, [state.index]);
+
+  return (
+    <View
+      style={[
+        tw`absolute bottom-0 left-0 right-0`,
+        {
+          backgroundColor: isDark ? colors.dark.surface : colors.light.bg,
+          borderTopWidth: 1,
+          borderTopColor: isDark ? colors.dark.border : colors.light.border,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 20,
+          paddingTop: 12,
+        },
+      ]}
+    >
+      {/* Slider animé avec ombre */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          {
+            position: 'absolute',
+            top: 8,
+            width: TAB_WIDTH,
+            height: 44,
+            alignItems: 'center',
+            transform: [{ translateX: slideAnim }],
+          },
+        ]}
+      >
+        <View
+          style={[
+            tw`w-12 h-12 rounded-full items-center justify-center`,
+            {
+              backgroundColor: isDark ? `${colors.primary}20` : `${colors.primary}15`,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 5,
+            },
+          ]}
+        />
+      </Animated.View>
+
+      {/* Tab buttons */}
+      <View style={tw`flex-row`}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const IconComponent = TAB_ICONS[route.name];
+          const label = options.title || route.name;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              onPress={onPress}
+              style={[tw`flex-1 items-center justify-center`, { height: 50 }]}
+              activeOpacity={0.7}
+            >
+              {IconComponent && (
+                <IconComponent
+                  size={24}
+                  color={isFocused ? colors.primary : isDark ? colors.dark.textTertiary : colors.light.textTertiary}
+                  strokeWidth={isFocused ? 2.5 : 2}
+                />
+              )}
+              <Text
+                style={[
+                  tw`text-xs mt-1 font-medium`,
+                  {
+                    color: isFocused ? colors.primary : isDark ? colors.dark.textTertiary : colors.light.textTertiary,
+                  },
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 function TabNavigator() {
   const { t } = useTranslation();
@@ -40,13 +163,8 @@ function TabNavigator() {
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarStyle: {
-          backgroundColor: isDark ? colors.dark.surface : colors.light.bg,
-          borderTopColor: isDark ? colors.dark.border : colors.light.border,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: isDark ? colors.dark.textTertiary : colors.light.textTertiary,
         headerStyle: {
           backgroundColor: isDark ? colors.dark.bg : colors.light.bg,
         },
@@ -59,7 +177,6 @@ function TabNavigator() {
         component={HomeScreen}
         options={{
           title: t('home.title'),
-          tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
           headerShown: false,
         }}
       />
@@ -68,7 +185,6 @@ function TabNavigator() {
         component={RevenueScreen}
         options={{
           title: t('revenue.title'),
-          tabBarIcon: ({ color, size }) => <Wallet size={size} color={color} />,
           headerShown: false,
         }}
       />
@@ -77,7 +193,6 @@ function TabNavigator() {
         component={AddExpenseScreen}
         options={{
           title: t('addExpense'),
-          tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
           headerShown: false,
         }}
       />
@@ -86,7 +201,6 @@ function TabNavigator() {
         component={AnalyticsScreen}
         options={{
           title: t('analytics.title'),
-          tabBarIcon: ({ color, size }) => <BarChart3 size={size} color={color} />,
           headerShown: false,
         }}
       />
@@ -95,7 +209,7 @@ function TabNavigator() {
         component={SettingsScreen}
         options={{
           title: t('settings.title'),
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
@@ -160,6 +274,14 @@ function AppNavigator() {
           <Stack.Screen
             name="ThemePalette"
             component={ThemePaletteScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="ExpensesList"
+            component={ExpensesListScreen}
             options={{
               presentation: 'modal',
               headerShown: false,
@@ -236,7 +358,7 @@ function AppContent() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <StatusBar style="light" />
         <AppNavigator />
       </NavigationContainer>
     </SafeAreaProvider>

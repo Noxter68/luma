@@ -43,7 +43,7 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
   const { isDark, colors, palette } = useTheme();
 
   // ✅ Le hook useSharedBudget gère déjà le real-time via Supabase subscriptions
-  const { budgetSummary, loading, expenses, incomes } = useSharedBudget(accountId);
+  const { budgetSummary, loading, expenses, incomes, refresh: refreshBudget } = useSharedBudget(accountId);
   const [members, setMembers] = useState<MemberWithProfile[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -59,8 +59,9 @@ export const SharedAccountDetailsScreen = ({ navigation, route }: SharedAccountD
     useCallback(() => {
       // Refresh members silencieusement (pas besoin de loader)
       fetchMembers();
-      // Les dépenses/revenus se refresh automatiquement via real-time subscriptions
-    }, [accountId])
+      // Refresh revenus/dépenses silencieusement au retour sur l'écran
+      refreshBudget();
+    }, [accountId, refreshBudget])
   );
 
   useEffect(() => {

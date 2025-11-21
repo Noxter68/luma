@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSharedExpenses } from './useSharedExpenses';
 import { useSharedIncomes } from './useSharedIncomes';
 import { useSharedRecurringExpenses } from './useSharedRecurringExpenses';
@@ -21,11 +21,16 @@ export const useSharedBudget = (accountId: string, month?: string) => {
   const currentMonth = month || new Date().toISOString().slice(0, 7);
 
   // Récupérer toutes les données nécessaires
-  const { expenses, loading: expensesLoading, getTotalExpenses } = useSharedExpenses(accountId, currentMonth);
+  const { expenses, loading: expensesLoading, getTotalExpenses, refresh: refreshExpenses } = useSharedExpenses(accountId, currentMonth);
 
-  const { incomes, loading: incomesLoading, getTotalIncomes } = useSharedIncomes(accountId, currentMonth);
+  const { incomes, loading: incomesLoading, getTotalIncomes, refresh: refreshIncomes } = useSharedIncomes(accountId, currentMonth);
 
-  const { recurringExpenses, loading: recurringLoading, getTotalRecurring } = useSharedRecurringExpenses(accountId);
+  const { recurringExpenses, loading: recurringLoading, getTotalRecurring, refresh: refreshRecurring } = useSharedRecurringExpenses(accountId);
+
+  // Fonction de refresh global silencieux (memoized pour éviter infinite loop)
+  const refresh = useCallback(async () => {
+    await Promise.all([refreshExpenses(), refreshIncomes(), refreshRecurring()]);
+  }, [refreshExpenses, refreshIncomes, refreshRecurring]);
 
   // Calculer le résumé du budget
   const budgetSummary = useMemo<BudgetSummary>(() => {
@@ -69,5 +74,6 @@ export const useSharedBudget = (accountId: string, month?: string) => {
     expenses,
     incomes,
     recurringExpenses,
+    refresh,
   };
 };

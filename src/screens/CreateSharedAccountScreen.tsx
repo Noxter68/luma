@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useState } from 'react';
 import tw from '../lib/tailwind';
 import { useTranslation } from '../hooks/useTranslation';
@@ -63,8 +63,9 @@ export const CreateSharedAccountScreen = ({ navigation }: CreateSharedAccountScr
             <View style={tw`w-10`} />
           </View>
 
-          <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false}>
-            {/* Header Section */}
+          <KeyboardAvoidingView style={tw`flex-1`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView style={tw`flex-1`} contentContainerStyle={tw`pb-24`} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Header Section */}
             <View style={tw`px-6 pb-6`}>
               <View style={tw`items-center`}>
                 <Text style={tw`text-white/80 text-base mb-3 text-center`}>{t('sharedAccounts.nameYourAccount')}</Text>
@@ -115,7 +116,8 @@ export const CreateSharedAccountScreen = ({ navigation }: CreateSharedAccountScr
                 </TouchableOpacity>
               </LinearGradient>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </LinearGradient>
     </View>

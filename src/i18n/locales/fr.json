@@ -50,6 +50,17 @@
     "recurringHint": "Cette dépense sera automatiquement ajoutée chaque mois"
   },
   "addExpense": "Ajouter",
+  "expenses": {
+    "list": "Mes Dépenses",
+    "viewAll": "Voir mes dépenses",
+    "viewAllHint": "Gérer et modifier vos dépenses enregistrées",
+    "oneTime": "Ponctuelles",
+    "recurring": "Récurrentes",
+    "noExpenses": "Aucune dépense enregistrée",
+    "noRecurring": "Aucune dépense récurrente",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
   "categoryBudgets": "Budgets par catégorie",
   "loading": "Chargement...",
   "categories": {
@@ -223,6 +234,7 @@
     "confirmDeleteRecurring": "Voulez-vous supprimer cette dépense récurrente ?",
     "selectSource": "Sélectionner un type",
     "incomeSources": {
+      "salary": "Salaire",
       "contribution": "Contribution",
       "refund": "Remboursement",
       "gift": "Cadeau",
